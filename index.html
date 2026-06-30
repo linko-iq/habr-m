@@ -642,6 +642,78 @@ body.force-scroll-unlock{
 })();
 </script>
 
+
+
+<!-- ===== LINKO FINAL FIX: PRODUCT RENDER + PRIVATE STRONG CODE MESSAGE ===== -->
+<style id="linkoFinalProductCodeFixStyle">
+.code-help-box{margin-top:8px;padding:10px 12px;border-radius:15px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:12px;font-weight:900;line-height:1.7;display:none}.code-help-box.show{display:block;animation:codeHelp .25s ease}@keyframes codeHelp{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+#productsGrid.products{min-height:260px!important}.unit-select{appearance:auto!important;-webkit-appearance:menulist!important}.product .add-btn{position:relative;z-index:2}.products-fix-empty{grid-column:1/-1;text-align:center;color:#667085;font-weight:900;padding:24px 12px;background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:var(--soft)}
+@media(max-width:390px){.unit-note{display:none!important}.unit-select{min-height:30px!important;font-size:9px!important}.product h3{min-height:28px!important}.product img{height:66px!important}.add-btn{min-height:29px!important}}
+</style>
+<script id="linkoFinalProductCodeFixScript">
+(function(){
+  function safeCall(name){ try{ if(typeof window[name]==='function') window[name](); }catch(e){ console.warn(name,e); } }
+  function strongCode(code){ return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@#$%_\-!*.]{6,24}$/.test(String(code||'')); }
+  function showCodeHelp(msg){
+    let box=document.getElementById('codeHelpBox');
+    const input=document.getElementById('regCode');
+    if(input && !box){ input.insertAdjacentHTML('afterend','<div class="code-help-box" id="codeHelpBox"></div>'); box=document.getElementById('codeHelpBox'); }
+    if(box){ box.textContent=msg; box.classList.add('show'); setTimeout(()=>box.classList.remove('show'),5200); }
+    if(typeof toast==='function') toast(msg);
+  }
+  window.submitRegister=function(e){
+    e.preventDefault();
+    const name=(document.getElementById('regName')?.value||'').trim();
+    const area=(document.getElementById('regArea')?.value||'').trim();
+    const phone=(document.getElementById('regPhone')?.value||'').trim();
+    const code=(document.getElementById('regCode')?.value||'').trim();
+    const generic='الرمز غير قوي، يرجى استخدام رمز آخر يحتوي على أحرف إنكليزية وأرقام. مثال: Ali2026 أو Hm2026A';
+    if(!name || !area || !phone || !code){ if(typeof toast==='function') toast('أكمل جميع معلومات الاشتراك'); return; }
+    if(!strongCode(code)){ showCodeHelp(generic); return; }
+    let members=[]; try{ members=getMembers(); }catch(err){ members=[]; }
+    // لا نكشف أبداً أن الرمز مستخدم حتى لا يعرف أي شخص رمز مشترك آخر
+    if(members.some(m=>String(m.code||'')===code)){ showCodeHelp(generic); return; }
+    members.unshift({id:Date.now(),name,area,phone,code,status:'pending',balance:0});
+    setMembers(members);
+    e.target.reset();
+    const pop=document.getElementById('successPop');
+    if(pop) pop.classList.add('show');
+    setTimeout(()=>{ if(pop) pop.classList.remove('show'); if(typeof showScreen==='function') showScreen('welcomeScreen'); },5000);
+  };
+  window.renderProducts=function(){
+    safeCall('phase2ProductsBlocks');
+    if(typeof ensureCatToggle==='function') { try{ ensureCatToggle(); }catch(e){} }
+    const grid=document.getElementById('productsGrid'); if(!grid) return;
+    const searchEl=document.getElementById('productSearch');
+    const catText=document.getElementById('catToggleText'); if(catText) catText.textContent=window.activeCat||activeCat||'الخضار والفواكه';
+    const q=(searchEl?.value||'').trim().toLowerCase();
+    let all=[]; try{ all=Array.isArray(products)?products:[]; }catch(e){ all=[]; }
+    const ac=window.activeCat||activeCat||'الخضار والفواكه';
+    let list=all.filter(p=>!q ? p.cat===ac : String(p.name||'').toLowerCase().includes(q)||String(p.cat||'').toLowerCase().includes(q));
+    const sort=document.getElementById('sortProducts')?.value||'default';
+    if(sort==='low') list.sort((a,b)=>(+a.price||0)-(+b.price||0));
+    if(sort==='high') list.sort((a,b)=>(+b.price||0)-(+a.price||0));
+    if(sort==='name') list.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ar'));
+    const pc=document.getElementById('productsCount'); if(pc) pc.textContent=`${list.length} منتج ظاهر ضمن ${q?'نتائج البحث':ac}`;
+    if(!list.length){ grid.innerHTML='<div class="products-fix-empty">لا توجد منتجات مطابقة داخل هذا القسم</div>'; return; }
+    grid.innerHTML=list.map(p=>{
+      const inCart=(Array.isArray(cart)?cart:[]).find(x=>x.id===p.id);
+      const type=(typeof unitTypeForProduct==='function')?unitTypeForProduct(p):'piece';
+      const uTitle=(typeof unitTitle==='function')?unitTitle(type):(type==='kg'?'كغم':'عدد');
+      const note=type==='kg'?'اختر ربع / نصف / كيلو':'اختر العدد أو العبوة';
+      const unitOptions=type==='kg'
+        ? `<select class="unit-select" id="unitSelect_${p.id}"><option value="0.25">ربع كيلو</option><option value="0.5">نصف كيلو</option><option value="0.75">ثلاثة أرباع</option><option value="1" selected>1 كيلو</option><option value="1.25">كيلو وربع</option><option value="2">2 كيلو</option><option value="5">5 كيلو</option></select>`
+        : `<select class="unit-select" id="unitSelect_${p.id}"><option value="1" selected>1 ${uTitle}</option><option value="2">2 ${uTitle}</option><option value="3">3 ${uTitle}</option><option value="6">6 ${uTitle}</option></select>`;
+      const img=p.img||'';
+      return `<article class="product"><span class="product-badge">${p.badge||'متوفر'}</span><img src="${img}" alt="${p.name||''}" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22220%22 viewBox=%220 0 300 220%22%3E%3Crect width=%22300%22 height=%22220%22 fill=%22%23f3f4f6%22/%3E%3Ctext x=%22150%22 y=%22120%22 text-anchor=%22middle%22 font-size=%2240%22%3E🛒%3C/text%3E%3C/svg%3E'"><div class="product-body"><h3>${p.name||''}</h3><div class="product-meta"><b class="price">${money(+p.price||0)}</b>${p.oldPrice?`<span class="old-price">${money(p.oldPrice)}</span>`:''}</div><div class="unit-box">${unitOptions}<div class="unit-note">${note}</div></div><button class="add-btn ${inCart?'added':''}" onclick="addToCart(${p.id},this)">${inCart?'تمت الإضافة ✓':'إضافة للسلة'}</button></div></article>`;
+    }).join('');
+  };
+  // إعادة ربط الأحداث المهمة بعد التصحيح
+  const ps=document.getElementById('productSearch'); if(ps) ps.oninput=()=>window.renderProducts();
+  const sort=document.getElementById('sortProducts'); if(sort) sort.onchange=()=>window.renderProducts();
+})();
+</script>
+
 </body>
 </html>
 
