@@ -503,5 +503,143 @@ body.cart-page-open{
 })();
 </script>
 
+
+
+<!-- ===== FINAL GLOBAL SCROLL + WHATSAPP RETURN FIX ===== -->
+<style>
+/* الحل النهائي: لا نقفل جسم الصفحة نهائياً حتى لا يعلّق Safari/Chrome بعد الرجوع من واتساب */
+html,body{
+  position:static!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  height:auto!important;
+  min-height:100%!important;
+  -webkit-overflow-scrolling:touch!important;
+  touch-action:auto!important;
+}
+html.cart-page-open-html,
+body.cart-page-open{
+  position:static!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  height:auto!important;
+  min-height:100%!important;
+  width:100%!important;
+  touch-action:auto!important;
+}
+#cartSheet.bottom-sheet.show{
+  position:fixed!important;
+  inset:0!important;
+  display:block!important;
+  background:#f6f7f9!important;
+  overflow:hidden!important;
+  touch-action:auto!important;
+  z-index:9999!important;
+}
+#cartSheet .sheet{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  -webkit-overflow-scrolling:touch!important;
+  touch-action:pan-y!important;
+  overscroll-behavior-y:auto!important;
+  border-radius:0!important;
+  padding:16px 14px calc(260px + env(safe-area-inset-bottom))!important;
+  background:#f6f7f9!important;
+}
+#cartSheet:not(.show){
+  display:none!important;
+  pointer-events:none!important;
+}
+#cartSheet .sheet-head{
+  position:sticky!important;
+  top:0!important;
+}
+body:not(.cart-page-open) #cartSheet{
+  display:none!important;
+}
+body.force-scroll-unlock{
+  position:static!important;
+  overflow-y:auto!important;
+  height:auto!important;
+}
+</style>
+<script>
+(function(){
+  function hardUnlockScroll(){
+    const overlay=document.getElementById('cartSheet');
+    const sheet=overlay?.querySelector('.sheet');
+    document.body.classList.remove('cart-page-open');
+    document.documentElement.classList.remove('cart-page-open-html');
+    document.body.classList.add('force-scroll-unlock');
+    document.body.style.position='static';
+    document.body.style.overflowY='auto';
+    document.body.style.overflowX='hidden';
+    document.body.style.height='auto';
+    document.documentElement.style.position='static';
+    document.documentElement.style.overflowY='auto';
+    document.documentElement.style.height='auto';
+    if(overlay){
+      overlay.classList.remove('show');
+      overlay.style.display='none';
+      overlay.style.pointerEvents='none';
+    }
+    if(sheet){
+      sheet.style.overflowY='auto';
+      sheet.scrollTop=0;
+    }
+    setTimeout(()=>document.body.classList.remove('force-scroll-unlock'),500);
+  }
+  function safeShowHome(){
+    if(typeof showScreen==='function') showScreen('homeScreen');
+    setTimeout(()=>{ try{ window.scrollTo(0,0); }catch(e){} },60);
+  }
+  window.closeCart=function(){ hardUnlockScroll(); };
+  window.openCart=function(){
+    const overlay=document.getElementById('cartSheet');
+    const sheet=overlay?.querySelector('.sheet');
+    if(!overlay || !sheet) return;
+    if(typeof renderCart==='function') renderCart();
+    overlay.style.display='block';
+    overlay.style.pointerEvents='auto';
+    overlay.classList.add('show');
+    document.body.classList.add('cart-page-open');
+    document.documentElement.classList.add('cart-page-open-html');
+    document.body.style.position='static';
+    document.body.style.overflowY='auto';
+    document.body.style.height='auto';
+    requestAnimationFrame(()=>{ sheet.scrollTop=0; });
+  };
+  window.sendOrderWhatsApp=function(){
+    if(!window.cart || !cart.length){ if(typeof toast==='function') toast('السلة فارغة'); return; }
+    const n=document.getElementById('orderName'), a=document.getElementById('orderArea'), p=document.getElementById('orderPhone');
+    if(!n?.value || !a?.value || !p?.value){ if(typeof toast==='function') toast('أكمل الاسم والمنطقة ورقم الهاتف'); return; }
+    const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';
+    const lines=cart.map((x,i)=>`${i+1}. ${x.name}\nالكمية: ${x.qty}\nسعر المنتج: ${money(x.price)}\nالمجموع: ${money(x.price*x.qty)}`).join('\n--------------------\n');
+    const total=money(cart.reduce((s,x)=>s+x.price*x.qty,0));
+    const title=(window.currentBranch&&currentBranch.name)?currentBranch.name:'هايبر ماركت النخبة';
+    const msg=`طلب جديد - ${title}\n\nالاسم: ${n.value}\nالمنطقة: ${a.value}\nالهاتف: ${p.value}\nنوع الطلب: ${delivery}\n\nالمنتجات:\n${lines}\n\nالإجمالي: ${total}\n\nتم إرسال الطلب من نظام هايبر ماركت النخبة`;
+    const url=`https://wa.me/${window.WA||'9647747248826'}?text=${encodeURIComponent(msg)}`;
+    // نغلق صفحة السلة ونفك السكرول قبل الخروج للواتساب حتى لا يتجمّد المتصفح عند الرجوع
+    hardUnlockScroll();
+    safeShowHome();
+    try{ cart.length=0; if(typeof updateCartUI==='function') updateCartUI(); if(typeof renderCart==='function') renderCart(); }catch(e){}
+    setTimeout(()=>{ window.location.href=url; },120);
+  };
+  ['pageshow','focus','visibilitychange','resize','orientationchange'].forEach(ev=>{
+    window.addEventListener(ev,()=>{
+      if(ev==='visibilitychange' && document.visibilityState!=='visible') return;
+      hardUnlockScroll();
+    },{passive:true});
+  });
+  document.addEventListener('touchmove',function(){}, {passive:true});
+})();
+</script>
+
 </body>
 </html>
