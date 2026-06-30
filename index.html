@@ -995,3 +995,133 @@ body.force-scroll-unlock{
   const sp=byId('sortProducts'); if(sp) sp.onchange=()=>window.renderProducts();
 })();
 </script>
+
+<!-- ===== LINKO FINAL UPDATE: CUSTOM UNIT KEYBOARD + ADMIN PRODUCT EDITOR ===== -->
+<style id="linkoEditorUnitStyle">
+.unit-smart{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:6px 0}.unit-smart select,.unit-smart input{min-height:31px;border-radius:11px;border:1px solid var(--line);background:#f8fafc;color:#111827;font-weight:900;font-size:10.5px;padding:4px 6px;min-width:0}.unit-smart input{text-align:center}.unit-note{font-size:9px!important}.admin-product-btn{margin:10px 0 12px;width:100%;min-height:52px;border-radius:18px;background:linear-gradient(135deg,#0f5132,#111827);color:#fff;font-weight:900;box-shadow:0 16px 34px rgba(15,81,50,.18)}.product-editor-page{position:fixed;inset:0;z-index:99990;background:#f6f7f9;display:none;overflow:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 120px}.product-editor-page.show{display:block}.editor-head{position:sticky;top:0;z-index:3;background:rgba(246,247,249,.94);backdrop-filter:blur(16px);display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0 12px}.editor-title{display:flex;align-items:center;gap:10px}.editor-title .logo{flex:0 0 auto}.editor-title h2{font-size:22px;font-weight:900}.editor-title small{color:#667085;font-weight:900}.editor-section{background:#fff;border:1px solid var(--line);border-radius:24px;padding:14px;margin:12px 0;box-shadow:var(--soft)}.editor-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.editor-field{display:grid;gap:6px}.editor-field label{font-size:12px;color:#344054;font-weight:900}.editor-field input,.editor-field select{min-height:48px;border-radius:15px;border:1px solid var(--line);background:#fff;padding:10px;font-weight:900}.editor-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}.editor-product-list{display:grid;gap:10px;margin-top:12px}.editor-product-card{display:grid;grid-template-columns:74px 1fr;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:18px;padding:9px}.editor-product-card img{width:74px;height:74px;border-radius:15px;object-fit:cover;background:#f2f4f7}.editor-product-card h3{font-size:15px;font-weight:900}.editor-product-card p{font-size:12px;color:#667085;font-weight:800;line-height:1.7}.editor-mini-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.editor-mini-actions button{min-height:34px;border-radius:12px;padding:6px 9px;font-size:12px;font-weight:900}.image-preview{width:82px;height:82px;border-radius:16px;background:#f2f4f7;border:1px solid var(--line);object-fit:cover;display:none}.image-preview.show{display:block}@media(max-width:520px){.unit-smart{grid-template-columns:1fr}.unit-smart select,.unit-smart input{min-height:29px;font-size:9.5px}.editor-grid{grid-template-columns:1fr}.editor-actions{grid-template-columns:1fr}.editor-title h2{font-size:19px}.editor-product-card{grid-template-columns:62px 1fr}.editor-product-card img{width:62px;height:62px}.product-editor-page{padding-bottom:150px}}
+</style>
+<div class="product-editor-page" id="productEditorPage" dir="rtl">
+  <div class="editor-head">
+    <div class="editor-title"><div class="logo small-logo">H</div><div><h2>تعديل المنتجات</h2><small>إضافة، بحث، تغيير السعر والصورة</small></div></div>
+    <button class="icon-btn" onclick="closeProductEditor()">×</button>
+  </div>
+  <div class="editor-section">
+    <button class="btn full" onclick="toggleAddProductForm()">➕ إضافة منتج جديد</button>
+    <div id="addProductForm" style="display:none;margin-top:12px">
+      <div class="editor-grid">
+        <div class="editor-field"><label>اسم المنتج</label><input id="newProductName" placeholder="مثال: تفاح أخضر"></div>
+        <div class="editor-field"><label>القسم / الفرع</label><select id="newProductCat"></select></div>
+        <div class="editor-field"><label>السعر</label><input id="newProductPrice" type="number" min="0" step="250" placeholder="مثال: 3000"></div>
+        <div class="editor-field"><label>صورة المنتج من الجهاز</label><input id="newProductImg" type="file" accept="image/*" onchange="previewEditorImage(this,'newProductPreview')"></div>
+      </div>
+      <img class="image-preview" id="newProductPreview" alt="معاينة">
+      <div class="editor-actions"><button class="btn" onclick="saveNewProduct()">حفظ المنتج الجديد</button><button class="btn secondary" onclick="clearNewProductForm()">مسح الحقول</button></div>
+    </div>
+  </div>
+  <div class="editor-section">
+    <div class="editor-field"><label>البحث عن منتج</label><input id="productEditorSearch" oninput="renderProductEditorList()" placeholder="اكتب اسم المنتج أو القسم..."></div>
+    <div class="editor-product-list" id="productEditorList"></div>
+  </div>
+  <div class="editor-section" id="editProductBox" style="display:none">
+    <h3 style="font-size:20px;margin-bottom:10px">تعديل المنتج المحدد</h3>
+    <div class="editor-grid">
+      <div class="editor-field"><label>اسم المنتج</label><input id="editProductName"></div>
+      <div class="editor-field"><label>القسم / الفرع</label><select id="editProductCat"></select></div>
+      <div class="editor-field"><label>السعر الجديد</label><input id="editProductPrice" type="number" min="0" step="250"></div>
+      <div class="editor-field"><label>تغيير الصورة من الجهاز</label><input id="editProductImg" type="file" accept="image/*" onchange="previewEditorImage(this,'editProductPreview')"></div>
+    </div>
+    <img class="image-preview" id="editProductPreview" alt="معاينة">
+    <div class="editor-actions"><button class="btn" onclick="saveEditedProduct()">تحديث المنتج</button><button class="btn danger" onclick="deleteCustomProduct()">حذف المنتج إذا كان مضافاً</button></div>
+  </div>
+</div>
+<script id="linkoEditorUnitScript">
+(function(){
+  const STORE_KEY='hm_products_editor_v1';
+  let editingProductId=null;
+  const fallbackImg='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22220%22 viewBox=%220 0 300 220%22%3E%3Crect width=%22300%22 height=%22220%22 fill=%22%23f3f4f6%22/%3E%3Ctext x=%22150%22 y=%22120%22 text-anchor=%22middle%22 font-size=%2240%22%3E🛒%3C/text%3E%3C/svg%3E';
+  function byId(id){return document.getElementById(id)}
+  function readStore(){try{return JSON.parse(localStorage.getItem(STORE_KEY)||'{"overrides":{},"custom":[]}')}catch(e){return {overrides:{},custom:[]}}}
+  function writeStore(s){localStorage.setItem(STORE_KEY,JSON.stringify(s||{overrides:{},custom:[]}));}
+  function safeMoney(v){try{return money(Number(v)||0)}catch(e){return (Number(v)||0).toLocaleString('ar-IQ')+' د.ع'}}
+  window.applyProductEditorStore=function(){
+    if(!Array.isArray(products)) return;
+    const s=readStore();
+    Object.keys(s.overrides||{}).forEach(id=>{const p=products.find(x=>String(x.id)===String(id)); if(p) Object.assign(p,s.overrides[id]);});
+    (s.custom||[]).forEach(cp=>{ if(!products.some(p=>String(p.id)===String(cp.id))) products.push(cp); });
+  };
+  applyProductEditorStore();
+  window.getSelectedAmount=function(id){
+    const custom=byId('unitCustom_'+id); const typed=Number(custom?.value||0);
+    if(typed>0) return typed;
+    const el=byId('unitSelect_'+id); return Number(el?.value||1);
+  };
+  function unitHtml(p){
+    const type=(typeof unitTypeForProduct==='function')?unitTypeForProduct(p):(['الخضار والفواكه','اللحوم والدواجن'].includes(p.cat)?'kg':'piece');
+    const title=(typeof unitTitle==='function')?unitTitle(type):(type==='kg'?'كغم':'عدد');
+    let select='';
+    if(type==='kg') select=`<select class="unit-select" id="unitSelect_${p.id}"><option value="0.25">ربع كيلو</option><option value="0.5">نصف كيلو</option><option value="0.75">ثلاثة أرباع</option><option value="1" selected>1 كيلو</option><option value="1.25">كيلو وربع</option><option value="2">2 كيلو</option><option value="5">5 كيلو</option></select>`;
+    else select=`<select class="unit-select" id="unitSelect_${p.id}"><option value="1" selected>1 ${title}</option><option value="2">2 ${title}</option><option value="3">3 ${title}</option><option value="6">6 ${title}</option><option value="12">12 ${title}</option></select>`;
+    const step=type==='kg'?'0.25':'1'; const ph=type==='kg'?'اكتب كغم':'اكتب عدد';
+    const note=type==='kg'?'اختر جاهز أو اكتب الكمية من الكيبورد مثل 1.25':'اختر جاهز أو اكتب العدد من الكيبورد';
+    return `<div class="unit-smart">${select}<input id="unitCustom_${p.id}" type="number" inputmode="decimal" min="${step}" step="${step}" placeholder="${ph}"></div><div class="unit-note">${note}</div>`;
+  }
+  window.renderProducts=function(){
+    applyProductEditorStore();
+    try{ if(typeof phase2ProductsBlocks==='function') phase2ProductsBlocks(); }catch(e){}
+    try{ if(typeof ensureCatToggle==='function') ensureCatToggle(); }catch(e){}
+    if(byId('catToggleText')) byId('catToggleText').textContent=activeCat;
+    const grid=byId('productsGrid'); if(!grid) return;
+    const q=(byId('productSearch')?.value||'').trim().toLowerCase();
+    let list=(Array.isArray(products)?products:[]).filter(p=>{const n=String(p.name||'').toLowerCase(), c=String(p.cat||'').toLowerCase(); return q?(n.includes(q)||c.includes(q)):(p.cat===activeCat);});
+    const sort=byId('sortProducts')?.value||'default';
+    if(sort==='low')list.sort((a,b)=>(+a.price||0)-(+b.price||0)); if(sort==='high')list.sort((a,b)=>(+b.price||0)-(+a.price||0)); if(sort==='name')list.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ar'));
+    if(byId('productsCount')) byId('productsCount').textContent=`${list.length} منتج ظاهر ضمن ${q?'نتائج البحث':activeCat}`;
+    grid.innerHTML=list.length?list.map(p=>{const inCart=(Array.isArray(cart)?cart:[]).find(x=>x.id===p.id); return `<article class="product"><span class="product-badge">${p.badge||'متوفر'}</span><img src="${p.img||fallbackImg}" alt="${p.name||''}" loading="lazy" onerror="this.src='${fallbackImg}'"><div class="product-body"><h3>${p.name||''}</h3><div class="product-meta"><b class="price">${safeMoney(p.price)}</b>${p.oldPrice?`<span class="old-price">${safeMoney(p.oldPrice)}</span>`:''}</div><div class="unit-box">${unitHtml(p)}</div><button class="add-btn ${inCart?'added':''}" onclick="addToCart(${p.id},this)">${inCart?'تمت الإضافة ✓':'إضافة للسلة'}</button></div></article>`}).join(''):'<div class="products-fix-empty">لا توجد منتجات مطابقة داخل هذا القسم</div>';
+  };
+  window.addToCart=function(id,btn){
+    applyProductEditorStore(); const p=products.find(x=>String(x.id)===String(id)); if(!p) return;
+    const type=(typeof unitTypeForProduct==='function')?unitTypeForProduct(p):'piece'; const amount=Math.max(0,Number(getSelectedAmount(id)||1)); if(!amount){toast('اكتب كمية صحيحة'); return;}
+    const step=(typeof unitStep==='function')?unitStep(type):(type==='kg'?0.25:1);
+    let item=cart.find(x=>String(x.id)===String(id) && (x.unitType||type)===type);
+    if(item) item.qty=Number((Number(item.qty||0)+amount).toFixed(2)); else cart.push({...p,qty:amount,unitType:type,unitLabel:(typeof unitTitle==='function'?unitTitle(type):type),step});
+    if(btn){btn.classList.add('added','bump');btn.textContent='تمت الإضافة ✓';setTimeout(()=>btn.classList.remove('bump'),300)}
+    updateCartUI();
+  };
+  function ensureAdminProductButton(){
+    const content=byId('adminContent'); if(!content || content.classList.contains('hidden')) return;
+    if(!byId('openProductEditorBtn')){
+      const sec=content.querySelector('.section-title')||content.firstElementChild;
+      sec.insertAdjacentHTML('afterend','<button class="admin-product-btn" id="openProductEditorBtn" onclick="openProductEditor()">🛒 تعديل المنتجات والأسعار والصور</button>');
+    }
+  }
+  const oldRenderRequests=window.renderRequests; window.renderRequests=function(){ if(typeof oldRenderRequests==='function') oldRenderRequests(); ensureAdminProductButton(); };
+  const oldAdminLogin=window.adminLogin; window.adminLogin=function(){ if(typeof oldAdminLogin==='function') oldAdminLogin(); setTimeout(ensureAdminProductButton,80); };
+  function fillCatSelect(el){ if(!el) return; el.innerHTML=(cats||[]).map(c=>`<option value="${c}">${c}</option>`).join(''); }
+  window.openProductEditor=function(){ applyProductEditorStore(); fillCatSelect(byId('newProductCat')); fillCatSelect(byId('editProductCat')); byId('productEditorPage')?.classList.add('show'); renderProductEditorList(); setTimeout(()=>byId('productEditorSearch')?.focus(),80); };
+  window.closeProductEditor=function(){ byId('productEditorPage')?.classList.remove('show'); editingProductId=null; };
+  window.toggleAddProductForm=function(){ const f=byId('addProductForm'); if(f) f.style.display=f.style.display==='none'?'block':'none'; fillCatSelect(byId('newProductCat')); };
+  window.previewEditorImage=function(input,previewId){ const file=input.files && input.files[0]; if(!file) return; const r=new FileReader(); r.onload=()=>{const img=byId(previewId); if(img){img.src=r.result; img.classList.add('show'); img.dataset.src=r.result;}}; r.readAsDataURL(file); };
+  window.clearNewProductForm=function(){ ['newProductName','newProductPrice','newProductImg'].forEach(id=>{const el=byId(id); if(el) el.value='';}); const p=byId('newProductPreview'); if(p){p.src='';p.dataset.src='';p.classList.remove('show');} };
+  window.saveNewProduct=function(){
+    const name=byId('newProductName')?.value.trim(), cat=byId('newProductCat')?.value, price=Number(byId('newProductPrice')?.value||0), img=byId('newProductPreview')?.dataset.src || fallbackImg;
+    if(!name || !cat || !price){toast('أكمل اسم المنتج والقسم والسعر');return;}
+    const s=readStore(); const id=Date.now(); const p={id,name,cat,price,img,badge:'جديد',oldPrice:null,stock:30,custom:true}; s.custom=s.custom||[]; s.custom.unshift(p); writeStore(s); products.push(p); clearNewProductForm(); renderProductEditorList(); if(byId('productsScreen')?.classList.contains('active')) renderProducts(); toast('تمت إضافة المنتج');
+  };
+  window.renderProductEditorList=function(){
+    applyProductEditorStore(); const box=byId('productEditorList'); if(!box) return; const q=(byId('productEditorSearch')?.value||'').trim().toLowerCase();
+    let list=(products||[]).filter(p=>!q || String(p.name||'').toLowerCase().includes(q) || String(p.cat||'').toLowerCase().includes(q)).slice(0,80);
+    box.innerHTML=list.length?list.map(p=>`<div class="editor-product-card"><img src="${p.img||fallbackImg}" onerror="this.src='${fallbackImg}'"><div><h3>${p.name||''}</h3><p>${p.cat||''} • السعر: ${safeMoney(p.price)}</p><div class="editor-mini-actions"><button class="btn mini" onclick="selectProductForEdit(${p.id})">تعديل</button><button class="btn secondary mini" onclick="quickPricePrompt(${p.id})">تغيير السعر سريع</button></div></div></div>`).join(''):'<div class="empty">لا توجد منتجات مطابقة</div>';
+  };
+  window.selectProductForEdit=function(id){ applyProductEditorStore(); const p=products.find(x=>String(x.id)===String(id)); if(!p) return; editingProductId=p.id; fillCatSelect(byId('editProductCat')); byId('editProductName').value=p.name||''; byId('editProductCat').value=p.cat||''; byId('editProductPrice').value=p.price||0; const prev=byId('editProductPreview'); if(prev){prev.src=p.img||fallbackImg; prev.dataset.src=p.img||''; prev.classList.add('show');} byId('editProductBox').style.display='block'; byId('editProductBox').scrollIntoView({behavior:'smooth',block:'start'}); };
+  window.saveEditedProduct=function(){
+    if(!editingProductId){toast('اختر منتج أولاً');return;} const name=byId('editProductName')?.value.trim(), cat=byId('editProductCat')?.value, price=Number(byId('editProductPrice')?.value||0), img=byId('editProductPreview')?.dataset.src;
+    if(!name || !cat || !price){toast('أكمل بيانات المنتج');return;} const s=readStore(); const custom=(s.custom||[]).find(p=>String(p.id)===String(editingProductId));
+    if(custom){Object.assign(custom,{name,cat,price,img:img||custom.img});} else {s.overrides=s.overrides||{}; s.overrides[editingProductId]={...(s.overrides[editingProductId]||{}),name,cat,price}; if(img) s.overrides[editingProductId].img=img;}
+    writeStore(s); const p=products.find(x=>String(x.id)===String(editingProductId)); if(p) Object.assign(p,{name,cat,price,img:img||p.img}); renderProductEditorList(); if(byId('productsScreen')?.classList.contains('active')) renderProducts(); toast('تم تحديث المنتج');
+  };
+  window.quickPricePrompt=function(id){ const p=products.find(x=>String(x.id)===String(id)); if(!p) return; const val=prompt('اكتب السعر الجديد للمنتج: '+p.name, p.price); if(val===null) return; const price=Number(val); if(!price){toast('السعر غير صحيح'); return;} const s=readStore(); const custom=(s.custom||[]).find(x=>String(x.id)===String(id)); if(custom) custom.price=price; else {s.overrides=s.overrides||{}; s.overrides[id]={...(s.overrides[id]||{}),price};} writeStore(s); p.price=price; renderProductEditorList(); if(byId('productsScreen')?.classList.contains('active')) renderProducts(); toast('تم تغيير السعر'); };
+  window.deleteCustomProduct=function(){ if(!editingProductId) return; const s=readStore(); const idx=(s.custom||[]).findIndex(p=>String(p.id)===String(editingProductId)); if(idx<0){toast('يمكن حذف المنتجات المضافة فقط، أما الأصلية يتم تعديلها');return;} if(!confirm('حذف المنتج المضاف؟'))return; s.custom.splice(idx,1); writeStore(s); const pi=products.findIndex(p=>String(p.id)===String(editingProductId)); if(pi>=0) products.splice(pi,1); editingProductId=null; byId('editProductBox').style.display='none'; renderProductEditorList(); if(byId('productsScreen')?.classList.contains('active')) renderProducts(); toast('تم حذف المنتج'); };
+  const ps=byId('productSearch'); if(ps) ps.oninput=()=>renderProducts(); const sp=byId('sortProducts'); if(sp) sp.onchange=()=>renderProducts();
+  if(byId('adminContent') && !byId('adminContent').classList.contains('hidden')) ensureAdminProductButton();
+})();
+</script>
