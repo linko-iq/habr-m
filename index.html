@@ -927,3 +927,71 @@ body.force-scroll-unlock{
   if(document.getElementById('homeScreen')?.classList.contains('active')) setTimeout(updateBalanceCard,80);
 })();
 </script>
+
+<!-- ===== LINKO FINAL HOTFIX: PRODUCTS ALWAYS RENDER + SAFE STRONG CODE ===== -->
+<script id="linkoProductsFinalHotfix">
+(function(){
+  function byId(id){return document.getElementById(id)}
+  function safeMoney(v){ try{return money(Number(v)||0)}catch(e){return (Number(v)||0).toLocaleString('ar-IQ')+' د.ع'} }
+  function callIf(fn){ try{ if(typeof fn==='function') fn(); }catch(e){ console.warn('safe call', e); } }
+  window.ensureCatToggle = function(){
+    const searchBox=document.querySelector('#productsScreen .search');
+    if(searchBox && !byId('catToggle')){
+      searchBox.insertAdjacentHTML('afterend', '<button class="cat-toggle" id="catToggle" onclick="toggleCatsMenu()"><span>☰ الأقسام</span><b id="catToggleText"></b></button>');
+    }
+    const txt=byId('catToggleText'); if(txt) txt.textContent=activeCat || 'الأقسام';
+  };
+  window.toggleCatsMenu = function(){ const c=byId('catsBox'); if(c) c.classList.toggle('open'); };
+  window.renderCats = function(){
+    window.ensureCatToggle();
+    const box=byId('catsBox'); if(!box) return;
+    box.innerHTML=(cats||[]).map(c=>`<button class="cat-btn ${c===activeCat?'active':''}" onclick="activeCat='${c}';document.getElementById('catsBox')?.classList.remove('open');renderCats();renderProducts();">${c}</button>`).join('');
+    const txt=byId('catToggleText'); if(txt) txt.textContent=activeCat || 'الأقسام';
+  };
+  window.openBranch = function(i){
+    currentBranch=branches[i];
+    activeCat=(currentBranch && currentBranch.cat) ? currentBranch.cat : 'المواد الغذائية';
+    const bt=byId('branchTitle'); if(bt) bt.textContent=(currentBranch?.name||'القسم')+' • المنتجات';
+    if(typeof showScreen==='function') showScreen('productsScreen');
+    setTimeout(()=>{ try{ renderCats(); renderProducts(); }catch(e){ console.warn(e); } }, 30);
+  };
+  window.renderProducts = function(){
+    callIf(window.phase2ProductsBlocks);
+    window.ensureCatToggle();
+    const grid=byId('productsGrid'); if(!grid) return;
+    const searchEl=byId('productSearch');
+    const q=(searchEl && searchEl.value ? searchEl.value : '').trim().toLowerCase();
+    const ac=activeCat || 'الخضار والفواكه';
+    const txt=byId('catToggleText'); if(txt) txt.textContent=ac;
+    let all=Array.isArray(products)?products:[];
+    let list=all.filter(p=>{
+      const name=String(p.name||'').toLowerCase();
+      const cat=String(p.cat||'').toLowerCase();
+      return q ? (name.includes(q) || cat.includes(q)) : (p.cat===ac);
+    });
+    const sort=byId('sortProducts')?.value || 'default';
+    if(sort==='low') list.sort((a,b)=>(+a.price||0)-(+b.price||0));
+    if(sort==='high') list.sort((a,b)=>(+b.price||0)-(+a.price||0));
+    if(sort==='name') list.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ar'));
+    const pc=byId('productsCount'); if(pc) pc.textContent=`${list.length} منتج ظاهر ضمن ${q?'نتائج البحث':ac}`;
+    if(!list.length){
+      grid.innerHTML='<div class="products-fix-empty">لا توجد منتجات مطابقة داخل هذا القسم</div>';
+      return;
+    }
+    grid.innerHTML=list.map(p=>{
+      const c=Array.isArray(cart)?cart:[];
+      const inCart=c.find(x=>x.id===p.id);
+      const type=(typeof unitTypeForProduct==='function')?unitTypeForProduct(p):(['الخضار والفواكه','اللحوم والدواجن'].includes(p.cat)?'kg':'piece');
+      const title=(typeof unitTitle==='function')?unitTitle(type):(type==='kg'?'كغم':'عدد');
+      const note=type==='kg'?'اختر ربع / نصف / كيلو':'اختر العدد أو العبوة';
+      const unitOptions=type==='kg'
+        ? `<select class="unit-select" id="unitSelect_${p.id}"><option value="0.25">ربع كيلو</option><option value="0.5">نصف كيلو</option><option value="0.75">ثلاثة أرباع</option><option value="1" selected>1 كيلو</option><option value="1.25">كيلو وربع</option><option value="2">2 كيلو</option><option value="5">5 كيلو</option></select>`
+        : `<select class="unit-select" id="unitSelect_${p.id}"><option value="1" selected>1 ${title}</option><option value="2">2 ${title}</option><option value="3">3 ${title}</option><option value="6">6 ${title}</option></select>`;
+      const fallback='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22220%22 viewBox=%220 0 300 220%22%3E%3Crect width=%22300%22 height=%22220%22 fill=%22%23f3f4f6%22/%3E%3Ctext x=%22150%22 y=%22120%22 text-anchor=%22middle%22 font-size=%2240%22%3E🛒%3C/text%3E%3C/svg%3E';
+      return `<article class="product"><span class="product-badge">${p.badge||'متوفر'}</span><img src="${p.img||fallback}" alt="${p.name||''}" loading="lazy" onerror="this.src='${fallback}'"><div class="product-body"><h3>${p.name||''}</h3><div class="product-meta"><b class="price">${safeMoney(p.price)}</b>${p.oldPrice?`<span class="old-price">${safeMoney(p.oldPrice)}</span>`:''}</div><div class="unit-box">${unitOptions}<div class="unit-note">${note}</div></div><button class="add-btn ${inCart?'added':''}" onclick="addToCart(${p.id},this)">${inCart?'تمت الإضافة ✓':'إضافة للسلة'}</button></div></article>`;
+    }).join('');
+  };
+  const ps=byId('productSearch'); if(ps) ps.oninput=()=>window.renderProducts();
+  const sp=byId('sortProducts'); if(sp) sp.onchange=()=>window.renderProducts();
+})();
+</script>
