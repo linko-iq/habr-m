@@ -616,7 +616,7 @@ body.force-scroll-unlock{
     requestAnimationFrame(()=>{ sheet.scrollTop=0; });
   };
   window.sendOrderWhatsApp=function(){
-    if(!window.cart || !cart.length){ if(typeof toast==='function') toast('السلة فارغة'); return; }
+    if(typeof cart==='undefined' || !cart.length){ if(typeof toast==='function') toast('السلة فارغة'); return; }
     const n=document.getElementById('orderName'), a=document.getElementById('orderArea'), p=document.getElementById('orderPhone');
     if(!n?.value || !a?.value || !p?.value){ if(typeof toast==='function') toast('أكمل الاسم والمنطقة ورقم الهاتف'); return; }
     const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';
@@ -624,12 +624,13 @@ body.force-scroll-unlock{
     const total=money(cart.reduce((s,x)=>s+x.price*x.qty,0));
     const title=(window.currentBranch&&currentBranch.name)?currentBranch.name:'هايبر ماركت النخبة';
     const msg=`طلب جديد - ${title}\n\nالاسم: ${n.value}\nالمنطقة: ${a.value}\nالهاتف: ${p.value}\nنوع الطلب: ${delivery}\n\nالمنتجات:\n${lines}\n\nالإجمالي: ${total}\n\nتم إرسال الطلب من نظام هايبر ماركت النخبة`;
-    const url=`https://wa.me/${window.WA||'9647747248826'}?text=${encodeURIComponent(msg)}`;
+    const phone=(typeof WA!=='undefined'&&WA)?WA:'9647747248826';
+    const url=`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
     // نغلق صفحة السلة ونفك السكرول قبل الخروج للواتساب حتى لا يتجمّد المتصفح عند الرجوع
     hardUnlockScroll();
     safeShowHome();
     try{ cart.length=0; if(typeof updateCartUI==='function') updateCartUI(); if(typeof renderCart==='function') renderCart(); }catch(e){}
-    setTimeout(()=>{ window.location.href=url; },120);
+    setTimeout(()=>{ try{ window.open(url,'_blank'); }catch(e){ window.location.href=url; } },120);
   };
   ['pageshow','focus','visibilitychange','resize','orientationchange'].forEach(ev=>{
     window.addEventListener(ev,()=>{
