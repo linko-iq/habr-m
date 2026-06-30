@@ -729,3 +729,129 @@ body.force-scroll-unlock{
   #productsScreen.app-shell{padding-bottom:120px!important;}
 }
 </style>
+
+<!-- ===== LINKO MEMBER BALANCE + SMART UNITS PATCH ===== -->
+<style id="linkoBalanceUnitPatch">
+.member-wallet-card{margin:10px 0 12px;padding:14px;border-radius:22px;background:linear-gradient(135deg,#0f5132,#111827);color:#fff;box-shadow:0 16px 36px rgba(15,81,50,.18);border:1px solid rgba(255,255,255,.12)}
+.wallet-row{display:flex;align-items:center;justify-content:space-between;gap:10px}.wallet-row b{font-size:22px}.wallet-row small{opacity:.82;font-weight:900}.wallet-bar{height:10px;border-radius:999px;background:rgba(255,255,255,.18);overflow:hidden;margin-top:10px}.wallet-bar span{display:block;height:100%;width:0%;border-radius:inherit;background:linear-gradient(90deg,#22c55e,#f59e0b,#ef4444);transition:.35s}.wallet-warning{margin-top:9px;font-weight:900;color:#fde68a;font-size:12px;display:none}.member-wallet-card.low .wallet-warning{display:block}.member-wallet-card.empty .wallet-warning{display:block;color:#fecaca}.request .balance-admin{grid-column:1/-1;margin-top:10px;padding:10px;border-radius:16px;background:#f8fafc;border:1px solid var(--line);display:grid;gap:8px}.balance-admin label{font-weight:900;color:#344054;font-size:13px}.balance-admin .balance-line{display:grid;grid-template-columns:1fr auto auto;gap:7px}.balance-admin input{min-height:42px;border-radius:13px}.balance-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;background:#ecfdf3;color:#087443;font-weight:900;font-size:12px;margin-top:6px}.unit-box{display:grid;grid-template-columns:1fr;gap:6px;margin:6px 0}.unit-select{width:100%;min-height:34px;border-radius:12px;border:1px solid var(--line);background:#f8fafc;color:#111827;font-weight:900;font-size:11px;padding:4px 8px}.unit-note{font-size:10px;color:#667085;font-weight:900;line-height:1.4}.cart-item small .unit-label{color:#087443;font-weight:900}.cart-balance-note{padding:11px;border-radius:16px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-weight:900;margin:8px 0;line-height:1.6;font-size:13px}.cart-balance-note.ok{background:#ecfdf3;border-color:#bbf7d0;color:#087443}.insufficient-pop{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;background:rgba(17,24,39,.54);padding:18px}.insufficient-pop.show{display:flex}.insufficient-card{width:min(430px,94vw);padding:22px;border-radius:26px;background:#fff;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.28)}.insufficient-card h3{font-size:24px;margin-bottom:8px}.insufficient-card p{color:#475467;line-height:1.8;font-weight:800}.insufficient-card button{margin-top:14px;width:100%}
+@media(max-width:430px){.balance-admin .balance-line{grid-template-columns:1fr}.wallet-row b{font-size:20px}.unit-select{font-size:10px;min-height:32px}.unit-note{font-size:9px}.member-wallet-card{padding:12px;border-radius:20px}}
+</style>
+<div class="insufficient-pop" id="insufficientPop"><div class="insufficient-card"><h3>⚠️ رصيدك غير كافي</h3><p>يرجى تعبئة الرصيد من قسم الإدارة حتى تتمكن من إرسال الطلب.</p><button class="btn" onclick="document.getElementById('insufficientPop').classList.remove('show')">حسناً</button></div></div>
+<script id="linkoBalanceUnitScript">
+(function(){
+  const BALANCE_MAX_VIEW=100000;
+  const oldGetMembers = getMembers;
+  window.getBalanceValue = function(v){ return Number(v||0) || 0; };
+  window.normalizeMember = function(m){ if(m.balance===undefined) m.balance=0; return m; };
+  window.getMembers = function(){ return oldGetMembers().map(normalizeMember); };
+  window.setMembers = function(v){ localStorage.setItem('hm_members',JSON.stringify((v||[]).map(normalizeMember))); };
+  window.memberBalance = function(){ if(!currentMember) return 0; const fresh=getMembers().find(m=>m.id===currentMember.id || m.code===currentMember.code); if(fresh){ currentMember=fresh; return getBalanceValue(fresh.balance); } return getBalanceValue(currentMember.balance); };
+  window.unitTypeForProduct = function(p){
+    if(['الخضار والفواكه','اللحوم والدواجن'].includes(p.cat)) return 'kg';
+    if(/كرتون|طقم|علب|باكيت/.test(p.name)) return 'pack';
+    return 'piece';
+  };
+  window.unitTitle = function(type){ return type==='kg'?'كغم':(type==='pack'?'عبوة/كرتون':'عدد'); };
+  window.unitStep = function(type){ return type==='kg'?0.25:1; };
+  window.amountText = function(item){
+    const type=item.unitType||unitTypeForProduct(item), q=Number(item.qty||1);
+    if(type==='kg'){
+      if(q===0.25) return 'ربع كيلو'; if(q===0.5) return 'نصف كيلو'; if(q===0.75) return 'ثلاثة أرباع كيلو';
+      return (Number.isInteger(q)?q:q.toLocaleString('ar-IQ'))+' كغم';
+    }
+    if(type==='pack') return q+' '+(q>1?'عبوات':'عبوة');
+    return q+' '+(q>1?'قطع':'قطعة');
+  };
+  window.formatQty = function(q){ return Number.isInteger(Number(q))?String(Number(q)):Number(q).toLocaleString('ar-IQ'); };
+  window.getSelectedAmount = function(id){ const el=document.getElementById('unitSelect_'+id); return Number(el?.value||1); };
+  window.getCartProductsTotal = function(){ return cart.reduce((s,x)=>s+(Number(x.price)||0)*(Number(x.qty)||0),0); };
+  window.getCartFinalTotal = function(){ const productsTotal=getCartProductsTotal(); const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل'; const deliveryFee=(delivery==='توصيل' && productsTotal>0 && productsTotal<25000)?3000:0; return productsTotal+deliveryFee; };
+  window.updateBalanceCard = function(){
+    const old=document.getElementById('memberWalletCard');
+    const target=document.getElementById('memberCard');
+    if(!target || !currentMember) return;
+    if(!old){ target.insertAdjacentHTML('afterend',`<div class="member-wallet-card" id="memberWalletCard"><div class="wallet-row"><div><small>رصيد العضوية الحالي</small><br><b id="walletBalanceText">0 د.ع</b></div><div class="chip" id="walletPercentText">0%</div></div><div class="wallet-bar"><span id="walletBarFill"></span></div><div class="wallet-warning" id="walletWarningText">رصيدك منخفض، يرجى تعبئة الرصيد من الإدارة.</div></div>`); }
+    const bal=memberBalance(); const pct=Math.max(0,Math.min(100,Math.round((bal/BALANCE_MAX_VIEW)*100)));
+    walletBalanceText.textContent=money(bal); walletPercentText.textContent=pct+'%'; walletBarFill.style.width=pct+'%';
+    memberWalletCard.classList.toggle('low',bal>0 && bal<25000); memberWalletCard.classList.toggle('empty',bal<=0);
+    walletWarningText.textContent=bal<=0?'نفذ رصيدك، يرجى تعبئة الرصيد من قسم الإدارة.':'رصيدك منخفض، يرجى تعبئة الرصيد من الإدارة.';
+  };
+  const oldPhase3Home = window.phase3Home || phase3Home;
+  window.phase3Home = function(){ if(oldPhase3Home) oldPhase3Home(); updateBalanceCard(); };
+  const oldLoginMember = window.loginMember || loginMember;
+  window.loginMember = function(e){ oldLoginMember(e); setTimeout(updateBalanceCard,80); };
+  window.renderProducts = function(){
+    phase2ProductsBlocks?.(); ensureCatToggle?.(); if(document.getElementById('catToggleText'))catToggleText.textContent=activeCat;
+    const q=(productSearch?.value||'').trim().toLowerCase();
+    let list=products.filter(p=>(!q?p.cat===activeCat:p.name.toLowerCase().includes(q)||p.cat.toLowerCase().includes(q)));
+    const sort=document.getElementById('sortProducts')?.value||'default';
+    if(sort==='low')list.sort((a,b)=>a.price-b.price); if(sort==='high')list.sort((a,b)=>b.price-a.price); if(sort==='name')list.sort((a,b)=>a.name.localeCompare(b.name,'ar'));
+    if(document.getElementById('productsCount'))productsCount.textContent=`${list.length} منتج ظاهر ضمن ${q?'نتائج البحث':activeCat}`;
+    productsGrid.innerHTML=list.length?list.map(p=>{
+      let inCart=cart.find(x=>x.id===p.id), type=unitTypeForProduct(p), note=type==='kg'?'السعر محسوب لكل كيلو ويمكن الزيادة من السلة بربع كيلو':'يمكن زيادة الكمية من السلة';
+      let unitOptions= type==='kg'
+        ? `<select class="unit-select" id="unitSelect_${p.id}"><option value="0.25">ربع كيلو</option><option value="0.5">نصف كيلو</option><option value="1" selected>1 كيلو</option><option value="1.25">كيلو وربع</option><option value="2">2 كيلو</option><option value="5">5 كيلو</option></select>`
+        : `<select class="unit-select" id="unitSelect_${p.id}"><option value="1" selected>1 ${unitTitle(type)}</option><option value="2">2 ${unitTitle(type)}</option><option value="3">3 ${unitTitle(type)}</option><option value="6">6 ${unitTitle(type)}</option></select>`;
+      return `<article class="product"><span class="product-badge">${p.badge||'متوفر'}</span><img src="${p.img}" alt="${p.name}"><div class="product-body"><h3>${p.name}</h3><div class="product-meta"><b class="price">${money(p.price)}</b>${p.oldPrice?`<span class="old-price">${money(p.oldPrice)}</span>`:''}</div><div class="unit-box">${unitOptions}<div class="unit-note">${note}</div></div><button class="add-btn ${inCart?'added':''}" onclick="addToCart(${p.id},this)">${inCart?'تمت الإضافة ✓':'إضافة للسلة'}</button></div></article>`;
+    }).join(''):'<div class="empty">لا توجد منتجات مطابقة داخل هذا القسم</div>';
+  };
+  window.addToCart = function(id,btn){
+    const p=products.find(x=>x.id===id); if(!p) return;
+    const type=unitTypeForProduct(p), amount=getSelectedAmount(id), step=unitStep(type);
+    let item=cart.find(x=>x.id===id && (x.unitType||unitTypeForProduct(x))===type);
+    if(item){ item.qty=Number((Number(item.qty)+amount).toFixed(2)); }
+    else cart.push({...p,qty:amount,unitType:type,unitLabel:unitTitle(type),step});
+    if(btn){ btn.classList.add('added','bump'); btn.textContent='تمت الإضافة ✓'; setTimeout(()=>btn.classList.remove('bump'),300); }
+    updateCartUI();
+  };
+  window.renderCart = function(){
+    if(!cartList) return;
+    cartList.innerHTML=cart.length?cart.map(x=>`<div class="cart-item"><img src="${x.img}"><div><h4>${x.name}</h4><small><span class="unit-label">${amountText(x)}</span> × ${money(x.price)} = ${money(x.price*x.qty)}</small></div><div class="qty"><button onclick="changeQty(${x.id},1)">+</button><b>${amountText(x)}</b><button onclick="changeQty(${x.id},-1)">−</button></div></div>`).join(''):'<div class="empty">السلة فارغة حالياً</div>';
+    cartTotal.textContent=money(getCartFinalTotal());
+    let note=document.getElementById('cartBalanceNote');
+    const form=document.querySelector('#cartSheet .cart-form');
+    if(form && !note){ form.insertAdjacentHTML('afterbegin','<div class="cart-balance-note" id="cartBalanceNote"></div>'); note=document.getElementById('cartBalanceNote'); }
+    if(note){ const bal=memberBalance(), total=getCartFinalTotal(); note.classList.toggle('ok',bal>=total); note.textContent=`رصيدك الحالي: ${money(bal)} • قيمة الطلب: ${money(total)} ${bal<total?'• الرصيد غير كافي لإرسال هذا الطلب':'• الرصيد يكفي لهذا الطلب'}`; }
+    updateBalanceCard();
+  };
+  window.changeQty = function(id,d){
+    let it=cart.find(x=>x.id===id); if(!it) return;
+    const step=unitStep(it.unitType||unitTypeForProduct(it));
+    it.qty=Number((Number(it.qty)+(d*step)).toFixed(2));
+    if(it.qty<=0) cart=cart.filter(x=>x!==it);
+    updateCartUI(); renderProducts();
+  };
+  window.renderRequests = function(){
+    if(!requestsList) return; phase2AdminBlocks?.();
+    let list=getMembers(); const q=(adminQuery||'').trim().toLowerCase();
+    if(q)list=list.filter(m=>[m.name,m.area,m.phone,m.code,m.status,m.balance].join(' ').toLowerCase().includes(q));
+    const all=getMembers(); if(document.getElementById('stAll')){stAll.textContent=all.length;stPending.textContent=all.filter(x=>x.status==='pending').length;stApproved.textContent=all.filter(x=>x.status==='approved').length;stBlocked.textContent=all.filter(x=>x.status==='rejected'||x.status==='stopped').length}
+    requestsList.innerHTML=list.length?list.map(m=>`<div class="request" data-status="${m.status}"><div><h3>${m.name}</h3><p>المنطقة: ${m.area}<br>الهاتف: ${m.phone}<br>الرمز السري: ${m.code}</p><span class="status ${m.status}">${statusText(m.status)}</span><span class="balance-chip">💳 الرصيد: ${money(m.balance||0)}</span></div><div class="req-actions"><button class="btn mini" onclick="approveWithBalance(${m.id})">✅ موافقة مع الرصيد</button><button class="btn danger mini" onclick="setStatus(${m.id},'rejected')">❌ رفض</button><button class="btn dark mini" onclick="setStatus(${m.id},'stopped')">🛑 إيقاف</button></div><div class="balance-admin"><label>تسجيل / تعبئة رصيد الزبون</label><div class="balance-line"><input id="balanceInput_${m.id}" type="number" min="0" step="1000" placeholder="مثال: 100000" value="${m.balance||''}"><button class="btn mini" onclick="saveBalance(${m.id})">💾 حفظ الرصيد</button><button class="btn secondary mini" onclick="quickAddBalance(${m.id},100000)">+100 ألف</button></div></div></div>`).join(''):'<div class="empty">لا توجد نتائج مطابقة حالياً</div>';
+  };
+  window.saveBalance = function(id){ const val=Number(document.getElementById('balanceInput_'+id)?.value||0); let list=getMembers(); const m=list.find(x=>x.id===id); if(m){m.balance=Math.max(0,val); setMembers(list); if(currentMember && currentMember.id===id) currentMember=m; renderRequests(); updateBalanceCard(); toast('تم حفظ رصيد الزبون');} };
+  window.quickAddBalance = function(id,amount){ let list=getMembers(); const m=list.find(x=>x.id===id); if(m){m.balance=getBalanceValue(m.balance)+amount; setMembers(list); if(currentMember && currentMember.id===id) currentMember=m; renderRequests(); updateBalanceCard(); toast('تمت إضافة رصيد');} };
+  window.approveWithBalance = function(id){ saveBalance(id); setStatus(id,'approved'); };
+  const oldSetStatus = window.setStatus || setStatus;
+  window.setStatus = function(id,status){ let list=getMembers(); const m=list.find(x=>x.id===id); if(m){m.status=status; if(m.balance===undefined)m.balance=0;} setMembers(list); renderRequests(); toast('تم تحديث حالة الحساب'); };
+  window.deductMemberBalance = function(amount){ if(!currentMember) return; let list=getMembers(); const m=list.find(x=>x.id===currentMember.id || x.code===currentMember.code); if(m){m.balance=Math.max(0,getBalanceValue(m.balance)-amount); currentMember=m; setMembers(list); updateBalanceCard();} };
+  window.sendOrderWhatsApp = function(){
+    if(!cart.length){ toast('السلة فارغة'); return; }
+    const n=document.getElementById('orderName'), a=document.getElementById('orderArea'), p=document.getElementById('orderPhone');
+    if(!n?.value || !a?.value || !p?.value){ toast('أكمل الاسم والمنطقة ورقم الهاتف'); return; }
+    const totalNumber=getCartFinalTotal(); const bal=memberBalance();
+    if(bal<totalNumber){ document.getElementById('insufficientPop')?.classList.add('show'); toast('رصيدك غير كافي، يرجى تعبئة الرصيد من الإدارة'); return; }
+    const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';
+    const lines=cart.map((x,i)=>`${i+1}. ${x.name}\nالكمية: ${amountText(x)}\nسعر الوحدة: ${money(x.price)}\nالمجموع: ${money(x.price*x.qty)}`).join('\n--------------------\n');
+    const title=(currentBranch&&currentBranch.name)?currentBranch.name:'هايبر ماركت النخبة';
+    const msg=`طلب جديد - ${title}\n\nالاسم: ${n.value}\nالمنطقة: ${a.value}\nالهاتف: ${p.value}\nنوع الطلب: ${delivery}\n\nالمنتجات:\n${lines}\n\nالمجموع النهائي: ${money(totalNumber)}\nالرصيد قبل الطلب: ${money(bal)}\nالرصيد المتبقي: ${money(bal-totalNumber)}\n\nتم إرسال الطلب من نظام هايبر ماركت النخبة`;
+    deductMemberBalance(totalNumber);
+    const phone=(typeof WA!=='undefined'&&WA)?WA:'9647747248826'; const url=`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    try{ document.getElementById('cartSheet')?.classList.remove('show'); document.body.classList.remove('cart-page-open'); document.documentElement.classList.remove('cart-page-open-html'); document.body.style.position=''; document.body.style.overflow=''; document.body.style.height=''; }catch(e){}
+    cart=[]; updateCartUI(); renderCart(); showScreen('homeScreen');
+    setTimeout(()=>{ try{ window.open(url,'_blank'); }catch(e){ window.location.href=url; } },120);
+  };
+  // نحدّث البيانات القديمة تلقائياً بدون مسح أي حساب سابق
+  setMembers(getMembers());
+  if(document.getElementById('homeScreen')?.classList.contains('active')) setTimeout(updateBalanceCard,80);
+})();
+</script>
