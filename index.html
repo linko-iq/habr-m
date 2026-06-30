@@ -644,3 +644,88 @@ body.force-scroll-unlock{
 
 </body>
 </html>
+
+<!-- ===== LINKO FINAL PRODUCT PAGE RESPONSIVE PATCH: floating total no longer blocks last product buttons ===== -->
+<style id="linkoNoOverlayTotalPatch">
+/* نجعل مجموع السلة زر صغير مثل زر الإضافة، حتى لا يغطي منتجات الصف الأخير */
+.phase3-floating-total,
+.phase3-floating-total.show{
+  left:14px!important;
+  right:auto!important;
+  bottom:90px!important;
+  width:auto!important;
+  min-width:112px!important;
+  max-width:38vw!important;
+  min-height:38px!important;
+  padding:7px 11px!important;
+  border-radius:15px!important;
+  justify-content:center!important;
+  font-size:13px!important;
+  line-height:1.2!important;
+  box-shadow:0 10px 24px rgba(16,24,40,.12)!important;
+  z-index:31!important;
+}
+.phase3-floating-total #phase3TotalText{
+  max-width:86px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  display:inline-block!important;
+}
+/* نضيف مساحة آمنة آخر صفحة المنتجات حتى آخر زر إضافة يظهر بكل الشاشات */
+#productsScreen.app-shell{
+  padding-bottom:168px!important;
+}
+.products{
+  padding-bottom:24px!important;
+}
+/* زر السلة يبقى واضح، لكن لا يضغط محتوى آخر المنتجات */
+.float-cart.show{
+  z-index:32!important;
+}
+@media(max-width:720px){
+  .phase3-floating-total,
+  .phase3-floating-total.show{
+    left:14px!important;
+    right:auto!important;
+    bottom:86px!important;
+    min-width:104px!important;
+    max-width:34vw!important;
+    min-height:36px!important;
+    padding:6px 10px!important;
+    font-size:12.5px!important;
+  }
+  .phase3-floating-total #phase3TotalText{max-width:74px!important;}
+  #productsScreen.app-shell{padding-bottom:172px!important;}
+}
+@media(max-width:430px){
+  .phase3-floating-total,
+  .phase3-floating-total.show{
+    left:12px!important;
+    bottom:84px!important;
+    min-width:96px!important;
+    max-width:32vw!important;
+    min-height:34px!important;
+    padding:6px 9px!important;
+    border-radius:14px!important;
+    font-size:11.5px!important;
+    gap:4px!important;
+  }
+  .phase3-floating-total #phase3TotalText{max-width:64px!important;}
+  #productsScreen.app-shell{padding-bottom:178px!important;}
+}
+@media(max-width:360px){
+  .products{grid-template-columns:repeat(2,1fr)!important;gap:8px!important;}
+  .product img{height:82px!important;}
+  .product h3{font-size:11px!important;}
+  .add-btn{font-size:10px!important;min-height:32px!important;}
+  .phase3-floating-total,.phase3-floating-total.show{max-width:36vw!important;}
+}
+@media(min-width:900px){
+  .products{grid-template-columns:repeat(4,1fr)!important;}
+  .product img{height:140px!important;}
+  .phase3-floating-total,.phase3-floating-total.show{left:24px!important;bottom:24px!important;max-width:180px!important;}
+  .float-cart.show{right:24px!important;bottom:24px!important;}
+  #productsScreen.app-shell{padding-bottom:120px!important;}
+}
+</style>
