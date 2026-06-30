@@ -421,5 +421,87 @@ body.cart-page-open{
 })();
 </script>
 
+
+
+<!-- ===== CART PAGE IOS SCROLL EMERGENCY FIX V2 ===== -->
+<style>
+/* إصلاح مباشر لمشكلة الآيفون: نخلي السلة نفسها هي منطقة السكرول الرسمية */
+html,body{
+  width:100%!important;
+  min-height:100%!important;
+}
+body.cart-page-open{
+  overflow:hidden!important;
+  height:100dvh!important;
+  position:fixed!important;
+  width:100%!important;
+}
+#cartSheet.bottom-sheet.show{
+  position:fixed!important;
+  inset:0!important;
+  height:100dvh!important;
+  max-height:100dvh!important;
+  display:block!important;
+  overflow:hidden!important;
+  background:#f6f7f9!important;
+  touch-action:none!important;
+}
+#cartSheet .sheet{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100dvh!important;
+  min-height:100dvh!important;
+  max-height:100dvh!important;
+  overflow-y:scroll!important;
+  overflow-x:hidden!important;
+  -webkit-overflow-scrolling:touch!important;
+  overscroll-behavior-y:contain!important;
+  touch-action:pan-y!important;
+  border-radius:0!important;
+  background:#f6f7f9!important;
+  padding:16px 14px calc(240px + env(safe-area-inset-bottom))!important;
+  box-shadow:none!important;
+}
+#cartSheet .sheet-head{
+  position:sticky!important;
+  top:0!important;
+  z-index:30!important;
+  margin:-16px -14px 14px!important;
+  padding:14px!important;
+  background:rgba(246,247,249,.98)!important;
+  border-bottom:1px solid rgba(228,231,236,.95)!important;
+}
+#cartSheet .cart-form{
+  margin-bottom:120px!important;
+}
+#cartSheet input,#cartSheet button,#cartSheet label{
+  touch-action:manipulation!important;
+}
+@supports not (height:100dvh){
+  body.cart-page-open,#cartSheet.bottom-sheet.show,#cartSheet .sheet{height:100vh!important;max-height:100vh!important;min-height:100vh!important;}
+}
+</style>
+<script>
+(function(){
+  window.openCart=function(){
+    const overlay=document.getElementById('cartSheet');
+    const sheet=overlay?.querySelector('.sheet');
+    if(!overlay || !sheet) return;
+    overlay.classList.add('show');
+    document.body.classList.add('cart-page-open');
+    document.documentElement.classList.add('cart-page-open-html');
+    if(typeof renderCart==='function') renderCart();
+    requestAnimationFrame(()=>{sheet.scrollTop=0;});
+  };
+  window.closeCart=function(){
+    const overlay=document.getElementById('cartSheet');
+    if(overlay) overlay.classList.remove('show');
+    document.body.classList.remove('cart-page-open');
+    document.documentElement.classList.remove('cart-page-open-html');
+  };
+})();
+</script>
+
 </body>
 </html>
