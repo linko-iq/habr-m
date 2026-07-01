@@ -1847,3 +1847,82 @@ button,input,select{touch-action:manipulation;}
   renderBranches();
 })();
 </script>
+
+<!-- ===== LINKO FIX V4: SHOW ALL PRODUCE PRODUCTS, NOT ONLY FIRST CATEGORY ===== -->
+<style id="linkoProduceAllVisibleFixStyle">
+.produce-section-title{
+  grid-column:1/-1;
+  margin:8px 0 2px;
+  padding:11px 13px;
+  border-radius:18px;
+  background:linear-gradient(135deg,#0f5132,#10b981);
+  color:#fff;
+  font-weight:900;
+  box-shadow:0 10px 26px rgba(15,81,50,.14);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+.produce-section-title small{font-size:12px;opacity:.9;font-weight:900}
+.produce-all-note{grid-column:1/-1;margin-bottom:8px!important}
+@media(max-width:520px){
+  .produce-section-title{font-size:12px;padding:9px 10px;border-radius:15px}
+  .produce-section-title small{font-size:10px}
+}
+</style>
+<script id="linkoProduceAllVisibleFixScript">
+(function(){
+  const prevRenderProducts = window.renderProducts;
+  const PRODUCE_CATS = ['الخضروات الأساسية','خضروات المرق والمحاشي','الخضرة والورقيات','خضروات ورقية للطبخ','خضروات متنوعة','الفواكه الدائمة','فواكه الصيف','فواكه الشتاء','التمور والمحليات'];
+  function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+  function unitTypeForLocal(p){
+    try{ if(typeof unitTypeForProduct === 'function') return unitTypeForProduct(p); }catch(e){}
+    return PRODUCE_CATS.includes(p.cat) ? 'kg' : 'piece';
+  }
+  function unitTitleLocal(t){
+    try{ if(typeof unitTitle === 'function') return unitTitle(t); }catch(e){}
+    return t === 'kg' ? 'كغم' : 'عدد';
+  }
+  function unitBoxLocal(pr){
+    const t = unitTypeForLocal(pr);
+    if(t === 'kg'){
+      return `<div class="unit-smart"><select id="unitSelect_${pr.id}"><option value="0.25">ربع كيلو</option><option value="0.5">نصف كيلو</option><option value="0.75">ثلاثة أرباع</option><option value="1" selected>1 كيلو</option><option value="1.25">كيلو وربع</option><option value="2">2 كيلو</option><option value="5">5 كيلو</option></select><input id="unitCustom_${pr.id}" type="number" inputmode="decimal" min="0.25" step="0.25" placeholder="اكتب كغم"></div><div class="unit-note">اختر جاهز أو اكتب الكمية</div>`;
+    }
+    return `<div class="unit-smart"><select id="unitSelect_${pr.id}"><option value="1" selected>1 ${unitTitleLocal(t)}</option><option value="2">2 ${unitTitleLocal(t)}</option><option value="3">3 ${unitTitleLocal(t)}</option><option value="6">6 ${unitTitleLocal(t)}</option></select><input id="unitCustom_${pr.id}" type="number" inputmode="numeric" min="1" step="1" placeholder="اكتب عدد"></div><div class="unit-note">اختر جاهز أو اكتب العدد</div>`;
+  }
+  function productCard(pr){
+    const inCart = Array.isArray(cart) ? cart.find(x=>String(x.id)===String(pr.id)) : null;
+    return `<article class="product"><span class="product-badge">${esc(pr.badge||'متوفر')}</span><img src="${pr.img||''}" alt="${esc(pr.name)}"><div class="product-body"><h3>${esc(pr.name)}</h3><div class="unit-box">${unitBoxLocal(pr)}</div><button class="add-btn ${inCart?'added':''}" onclick="addToCart(${pr.id},this)">${inCart?'تمت الإضافة ✓':'إضافة للسلة'}</button></div></article>`;
+  }
+  window.renderProducts = function(){
+    const branchType = (window.currentBranch && currentBranch.type) ? currentBranch.type : '';
+    if(branchType !== 'produce'){
+      if(typeof prevRenderProducts === 'function') return prevRenderProducts();
+      return;
+    }
+    const grid = document.getElementById('productsGrid');
+    if(!grid) return;
+    grid.className = 'products';
+    const q = (document.getElementById('productSearch')?.value || '').trim().toLowerCase();
+    let all = (Array.isArray(products)?products:[]).filter(p=>!p.restaurantId && PRODUCE_CATS.includes(p.cat));
+    let html = `<div class="client-stage-note produce-all-note">تم عرض جميع منتجات المخضر والفواكه كاملة — عدد المنتجات: ${all.length}</div>`;
+    if(q){
+      const found = all.filter(p=>String(p.name||'').toLowerCase().includes(q) || String(p.cat||'').toLowerCase().includes(q));
+      html += found.length ? found.map(productCard).join('') : '<div class="products-fix-empty">لا توجد منتجات مطابقة للبحث</div>';
+      grid.innerHTML = html;
+      const pc=document.getElementById('productsCount'); if(pc) pc.textContent = `${found.length} منتج ظاهر ضمن نتائج البحث`;
+      return;
+    }
+    PRODUCE_CATS.forEach(cat=>{
+      const list = all.filter(p=>p.cat===cat);
+      if(!list.length) return;
+      html += `<div class="produce-section-title"><span>${esc(cat)}</span><small>${list.length} منتج</small></div>` + list.map(productCard).join('');
+    });
+    grid.innerHTML = html;
+    const pc=document.getElementById('productsCount'); if(pc) pc.textContent = `${all.length} منتج ظاهر ضمن فرع المخضر والفواكه`;
+    const catText=document.getElementById('catToggleText'); if(catText) catText.textContent='كل منتجات المخضر والفواكه';
+  };
+  const ps=document.getElementById('productSearch'); if(ps) ps.oninput=()=>window.renderProducts();
+})();
+</script>
