@@ -877,6 +877,169 @@ button,input,select{touch-action:manipulation;}
 }
 </style>
 
+
+
+<!-- ===== LINKO CLIENT PRODUCE FULL V2: add meat/kitchen branches + complete produce list ===== -->
+<style id="linkoClientProduceFullV2Style">
+.client-empty-branch{grid-column:1/-1;background:#fff;border:1px solid var(--line);border-radius:26px;padding:26px;text-align:center;box-shadow:var(--soft);color:#475467;font-weight:900;line-height:1.9}.client-empty-branch b{display:block;font-size:24px;color:#111827;margin-bottom:8px}.product .price,.product-meta,.old-price,.stock,#cartTotal,.total{display:none!important}.client-stage-note{margin:0 0 12px;padding:11px 13px;border-radius:18px;background:#ecfdf3;border:1px solid #bbf7d0;color:#087443;font-weight:900;text-align:center;line-height:1.7}.branch-card h3 small{display:block!important}.product h3{min-height:38px!important}.products-fix-empty b{display:block;font-size:22px;color:#111827;margin-bottom:6px}@media(max-width:520px){.client-stage-note{font-size:12px}.product h3{min-height:35px!important}}
+</style>
+<script id="linkoClientProduceFullV2Script">
+(function(){
+  const SVG_NS='http://www.w3.org/2000/svg';
+  function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+  function imgCard(title,emoji,bg1='#0f5132',bg2='#10b981'){
+    const svg=`<svg xmlns="${SVG_NS}" viewBox="0 0 420 300"><defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="${bg1}"/><stop offset="1" stop-color="${bg2}"/></linearGradient></defs><rect width="420" height="300" rx="34" fill="url(#g)"/><circle cx="60" cy="55" r="82" fill="rgba(255,255,255,.14)"/><circle cx="360" cy="260" r="112" fill="rgba(255,255,255,.12)"/><text x="210" y="132" text-anchor="middle" font-size="78">${emoji}</text><text x="210" y="218" text-anchor="middle" font-family="Arial" font-size="27" font-weight="900" fill="white">${esc(title)}</text></svg>`;
+    return 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg);
+  }
+  function prod(name,cat,emoji='🥬',type='kg'){
+    return {id:0,name,cat,price:0,img:imgCard(name,emoji),badge:'متوفر',stock:99,unitKind:type};
+  }
+  const produceCats=['الخضروات الأساسية','خضروات المرق والمحاشي','الخضرة والورقيات','خضروات ورقية للطبخ','خضروات متنوعة','الفواكه الدائمة','فواكه الصيف','فواكه الشتاء','الفواكه والتمور المحلية'];
+  const groceryCats=['المواد الغذائية','المشروبات'];
+  const meatCats=['اللحوم'];
+  const kitchenCats=['أجهزة المطبخ'];
+  const produce=[
+    // الخضروات الأساسية
+    prod('الطماطة - أساس المرق والتشريب','الخضروات الأساسية','🍅'),
+    prod('البصل الأحمر - للطبخ','الخضروات الأساسية','🧅'),
+    prod('البصل الأبيض - للأكل الطازج','الخضروات الأساسية','🧅'),
+    prod('البصل الأخضر','الخضروات الأساسية','🌿'),
+    prod('البطاطا / البتيتة','الخضروات الأساسية','🥔'),
+    prod('الخيار العراقي','الخضروات الأساسية','🥒'),
+    prod('خيار السيال للزلاطة','الخضروات الأساسية','🥒'),
+    prod('الباذنجان للمقالي والتبسي وشيخ المحشي','الخضروات الأساسية','🍆'),
+    // خضروات المرق والمحاشي
+    prod('الكوسا / الشجر','خضروات المرق والمحاشي','🥒'),
+    prod('الباميا - الملكة في المطبخ العراقي','خضروات المرق والمحاشي','🥬'),
+    prod('الفلفل البارد - للمحشي والزلاطة','خضروات المرق والمحاشي','🫑'),
+    prod('الشجر الأحمر / القرع / اليقطين للمرق','خضروات المرق والمحاشي','🎃'),
+    prod('شلغم / اللفت لمرقة الشلغم الشتوية','خضروات المرق والمحاشي','🥬'),
+    prod('الشوندر / البنجر الأحمر','خضروات المرق والمحاشي','🫐'),
+    // الخضرة والورقيات الطازجة
+    prod('الرشاد','الخضرة والورقيات','🌿'),
+    prod('الريحان','الخضرة والورقيات','🌿'),
+    prod('البربين / البقلة','الخضرة والورقيات','🌿'),
+    prod('الفجل البلدي الأحمر','الخضرة والورقيات','🌶️'),
+    prod('الفجل الأبيض','الخضرة والورقيات','⚪'),
+    prod('الكرفس','الخضرة والورقيات','🌿'),
+    prod('المعدنوس / البقدونس','الخضرة والورقيات','🌿'),
+    prod('الكزبرة','الخضرة والورقيات','🌿'),
+    prod('الشبنت / الشبث لمرقة السبانغ والباجلا','الخضرة والورقيات','🌿'),
+    prod('الجرجير','الخضرة والورقيات','🌿'),
+    // خضروات ورقية للطبخ
+    prod('السبانغ / السبانخ','خضروات ورقية للطبخ','🥬'),
+    prod('السلق - أساسي في الدولمة العراقية','خضروات ورقية للطبخ','🥬'),
+    prod('اللهانة / الملفوف الأبيض','خضروات ورقية للطبخ','🥬'),
+    prod('اللهانة / الملفوف الأحمر','خضروات ورقية للطبخ','🥬'),
+    prod('الخس الأخضر','خضروات ورقية للطبخ','🥬'),
+    // خضروات أخرى متنوعة
+    prod('الثوم العراقي الفصوص','خضروات متنوعة','🧄'),
+    prod('الثوم الأخضر بموسمه','خضروات متنوعة','🌿'),
+    prod('الليمون حامض للعصر فوق الأكل والزلاطات','خضروات متنوعة','🍋'),
+    prod('الفلفل الحار الأخضر','خضروات متنوعة','🌶️'),
+    prod('القرنابيط / القرنبيط للشوي أو الطرشي','خضروات متنوعة','🥦'),
+    prod('البروكلي','خضروات متنوعة','🥦'),
+    prod('الجزر','خضروات متنوعة','🥕'),
+    // الفواكه الأساسية الدائمة
+    prod('الموز','الفواكه الدائمة','🍌'),
+    prod('التفاح اللبناني الأحمر','الفواكه الدائمة','🍎'),
+    prod('التفاح اللبناني الأصفر','الفواكه الدائمة','🍏'),
+    prod('التفاح اللبناني الأخضر','الفواكه الدائمة','🍏'),
+    prod('التفاح الإيراني الأحمر','الفواكه الدائمة','🍎'),
+    prod('التفاح الإيراني الأصفر','الفواكه الدائمة','🍏'),
+    prod('التفاح الإيراني الأخضر','الفواكه الدائمة','🍏'),
+    prod('التفاح السوري الأحمر','الفواكه الدائمة','🍎'),
+    prod('التفاح السوري الأصفر','الفواكه الدائمة','🍏'),
+    prod('التفاح السوري الأخضر','الفواكه الدائمة','🍏'),
+    prod('البرتقال المحلي ديالى','الفواكه الدائمة','🍊'),
+    prod('البرتقال المصري المستورد','الفواكه الدائمة','🍊'),
+    prod('البرتقال التركي المستورد','الفواكه الدائمة','🍊'),
+    prod('اللالنكي / اليوسفي / الأفندي','الفواكه الدائمة','🍊'),
+    // فواكه الصيف
+    prod('الرقي / البطيخ الأحمر - أساس الصيف العراقي','فواكه الصيف','🍉'),
+    prod('البطيخ / الشمام الأصفر سامراء','فواكه الصيف','🍈'),
+    prod('البطيخ / الشمام الموصلي','فواكه الصيف','🍈'),
+    prod('العنب العراقي الأسود','فواكه الصيف','🍇'),
+    prod('العنب الكمالي','فواكه الصيف','🍇'),
+    prod('العنب الدسم','فواكه الصيف','🍇'),
+    prod('العنب الرازقي','فواكه الصيف','🍇'),
+    prod('الرمان - رمان شهربان العراقي الشهير','فواكه الصيف','🍎'),
+    prod('التين الأسود','فواكه الصيف','🫐'),
+    prod('التين الأخضر الوزيري','فواكه الصيف','🟢'),
+    prod('المشمش المحلي','فواكه الصيف','🍑'),
+    prod('المشمش المستورد','فواكه الصيف','🍑'),
+    prod('العلوجة / الكرز','فواكه الصيف','🍒'),
+    prod('الخوخ','فواكه الصيف','🍑'),
+    prod('الكمثرى / العرموط','فواكه الصيف','🍐'),
+    prod('الرنج / المانجو','فواكه الصيف','🥭'),
+    // فواكه الشتاء
+    prod('اللالنكي الشتوي / اليوسفي','فواكه الشتاء','🍊'),
+    prod('البرتقال الحامض','فواكه الشتاء','🍊'),
+    prod('البرتقال الحلو','فواكه الشتاء','🍊'),
+    prod('النومي حامض الأصفر العراقي','فواكه الشتاء','🍋'),
+    prod('النومي حامض الأخضر العراقي','فواكه الشتاء','🍋'),
+    prod('السندي / الجريب فروت','فواكه الشتاء','🍊'),
+    prod('الكيوي','فواكه الشتاء','🥝'),
+    prod('الفراولة الشتوية والربيعية','فواكه الشتاء','🍓'),
+    prod('الخرما / الكاكا','فواكه الشتاء','🍅'),
+    // الفواكه والتمور المحلية الخاصة
+    prod('التمر العراقي الخستاوي','الفواكه والتمور المحلية','🌴'),
+    prod('التمر العراقي الزهدي','الفواكه والتمور المحلية','🌴'),
+    prod('التمر العراقي البرحي','الفواكه والتمور المحلية','🌴'),
+    prod('التمر العراقي الساير','الفواكه والتمور المحلية','🌴'),
+    prod('الخلال بموسم الصيف ونهاية الآب','الفواكه والتمور المحلية','🌴'),
+    prod('الرطب بموسم الصيف ونهاية الآب','الفواكه والتمور المحلية','🌴'),
+    prod('النبق / السدر بموسمه الشتوي','الفواكه والتمور المحلية','🟤')
+  ];
+  const grocery=[
+    prod('رز بسمتي','المواد الغذائية','🍚','piece'),prod('رز عنبر','المواد الغذائية','🍚','piece'),prod('زيت طبخ','المواد الغذائية','🛢️','piece'),prod('سكر','المواد الغذائية','🧂','piece'),prod('طحين','المواد الغذائية','🌾','piece'),prod('معكرونة','المواد الغذائية','🍝','piece'),prod('شاي عراقي','المواد الغذائية','☕','piece'),prod('قهوة','المواد الغذائية','☕','piece'),prod('عدس','المواد الغذائية','🥣','piece'),prod('حمص','المواد الغذائية','🥣','piece'),prod('معجون طماطة','المواد الغذائية','🥫','piece'),prod('ماء معدني','المشروبات','💧','pack'),prod('عصير برتقال','المشروبات','🧃','piece'),prod('مشروبات غازية','المشروبات','🥤','piece')
+  ];
+  const restaurants=[
+    {id:'r1',name:'مطعم البيت العراقي',note:'أكلات عراقية ووجبات بيتية',img:imgCard('مطعم البيت العراقي','🍛','#7c2d12','#f59e0b'),meals:['تمن وقيمة','دولمة عراقية','برياني دجاج','تشريب لحم','كباب عراقي','قوزي لحم','مرق باميا','تبسي باذنجان'],drinks:['لبن بارد','ماء معدني','بيبسي','عصير برتقال','شاي عراقي']},
+    {id:'r2',name:'بركر النخبة',note:'بركر، زنجر، وجبات سريعة',img:imgCard('بركر النخبة','🍔','#111827','#ef4444'),meals:['بركر لحم','بركر دجاج','زنجر حار','وجبة أطفال','بطاطا مقلية','نكنك ساندويج','كرسبي دجاج'],drinks:['كولا','سفن أب','عصير تفاح','ماء معدني','ميلك شيك']},
+    {id:'r3',name:'شاورما الشام',note:'شاورما وصمون عربي',img:imgCard('شاورما الشام','🌯','#78350f','#f97316'),meals:['شاورما دجاج عربي','شاورما لحم عربي','صمون شاورما','وجبة شاورما عائلية','فتة شاورما','بطاطا مع ثوم'],drinks:['لبن عيران','بيبسي','ماء معدني','عصير رمان','عصير ليمون']},
+    {id:'r4',name:'بيت المشويات',note:'مشويات طازجة وسفري',img:imgCard('بيت المشويات','🥩','#3f1d12','#dc2626'),meals:['كباب لحم','تكة لحم','شيش طاووق','كبدة مشوية','مشكل مشاوي','عرايس لحم','سلطة مشاوي'],drinks:['ماء معدني','لبن','بيبسي','عصير برتقال','شاي']},
+    {id:'r5',name:'بيت الفطور',note:'فطور صباحي ومعجنات',img:imgCard('بيت الفطور','🥐','#92400e','#fbbf24'),meals:['كاهي وقيمر','بيض وطماطة','فلافل صمون','مناقيش جبن','مناقيش زعتر','قيمر وعسل','صحن فطور عائلي'],drinks:['شاي عراقي','حليب','عصير برتقال','ماء معدني','قهوة']}
+  ];
+  const restaurantProducts=[];
+  restaurants.forEach(r=>{r.meals.forEach(n=>restaurantProducts.push({...prod(n,'وجبات '+r.name,'🍽️','piece'),restaurantId:r.id,menuType:'وجبات'}));r.drinks.forEach(n=>restaurantProducts.push({...prod(n,'مشروبات '+r.name,'🥤','piece'),restaurantId:r.id,menuType:'مشروبات'}));});
+  const clientBranches=[
+    {name:'فرع المخضر والفواكه',type:'produce',cat:'الخضروات الأساسية',note:'جميع الخضروات والفواكه المطلوبة بالتفصيل',img:imgCard('المخضر والفواكه','🥬','#0f5132','#22c55e')},
+    {name:'فرع المطاعم',type:'restaurants',cat:'مطاعم',note:'مطاعم متعددة ومنيو خاص لكل مطعم',img:imgCard('المطاعم','🍽️','#111827','#f59e0b')},
+    {name:'فرع الغذائية',type:'grocery',cat:'المواد الغذائية',note:'مواد غذائية ومشروبات أساسية',img:imgCard('الغذائية','🛒','#1e3a8a','#10b981')},
+    {name:'فرع اللحوم',type:'meat',cat:'اللحوم',note:'قريباً — بدون منتجات حالياً',img:imgCard('اللحوم','🥩','#7f1d1d','#dc2626')},
+    {name:'فرع أجهزة المطبخ',type:'kitchen',cat:'أجهزة المطبخ',note:'قريباً — بدون منتجات حالياً',img:imgCard('أجهزة المطبخ','🍳','#374151','#0ea5e9')}
+  ];
+  let lcMode='produce', lcRestaurant=null;
+  function resetData(){branches.length=0;clientBranches.forEach(b=>branches.push(b));products.length=0;[...produce,...grocery,...restaurantProducts].forEach((p,i)=>{p.id=i+1;products.push(p)});}
+  resetData();
+  function setCats(arr){cats.length=0;arr.forEach(c=>cats.push(c));}
+  window.unitTypeForProduct=function(p){return p.unitKind || 'piece'};
+  window.unitTitle=function(type){return type==='kg'?'كغم':(type==='pack'?'كرتون/عبوة':'عدد')};
+  window.unitStep=function(type){return type==='kg'?0.25:1};
+  window.amountText=function(item){const q=Number(item.qty||1), type=item.unitType||unitTypeForProduct(item); if(type==='kg'){if(q===0.25)return'ربع كيلو';if(q===0.5)return'نصف كيلو';if(q===0.75)return'ثلاثة أرباع كيلو';return (Number.isInteger(q)?q:q.toLocaleString('ar-IQ'))+' كغم';} if(type==='pack')return q+' '+(q>1?'عبوات':'عبوة'); return q+' '+(q>1?'قطع':'قطعة');};
+  window.money=function(){return ''};
+  function unitHtml(p){const type=unitTypeForProduct(p); if(type==='kg')return `<div class="unit-smart"><select id="unitSelect_${p.id}"><option value="0.25">ربع كيلو</option><option value="0.5">نصف كيلو</option><option value="0.75">ثلاثة أرباع</option><option value="1" selected>1 كيلو</option><option value="1.25">كيلو وربع</option><option value="2">2 كيلو</option><option value="5">5 كيلو</option></select><input id="unitCustom_${p.id}" type="number" inputmode="decimal" min="0.25" step="0.25" placeholder="اكتب الكمية"></div>`; return `<div class="unit-smart"><select id="unitSelect_${p.id}"><option value="1" selected>1 ${unitTitle(type)}</option><option value="2">2 ${unitTitle(type)}</option><option value="3">3 ${unitTitle(type)}</option><option value="6">6 ${unitTitle(type)}</option><option value="12">12 ${unitTitle(type)}</option></select><input id="unitCustom_${p.id}" type="number" inputmode="numeric" min="1" step="1" placeholder="اكتب العدد"></div>`;}
+  window.getSelectedAmount=function(id){const c=Number(document.getElementById('unitCustom_'+id)?.value||0);return c>0?c:Number(document.getElementById('unitSelect_'+id)?.value||1)};
+  function card(p){const inCart=cart.find(x=>x.id===p.id);return `<article class="product"><span class="product-badge">${p.badge||'متوفر'}</span><img src="${p.img}" alt="${esc(p.name)}" loading="lazy"><div class="product-body"><h3>${p.name}</h3><div class="unit-box">${unitHtml(p)}</div><button class="add-btn ${inCart?'added':''}" onclick="addToCart(${p.id},this)">${inCart?'تمت الإضافة ✓':'إضافة للسلة'}</button></div></article>`;}
+  window.renderBranches=function(){try{phase2HomeBlocks?.();phase3Home?.()}catch(e){};const title=document.querySelector('#homeScreen .hero-banner h1');if(title)title.textContent='اختَر الفرع';const sub=document.querySelector('#homeScreen .hero-banner p');if(sub)sub.textContent='الفروع الحالية: المخضر والفواكه، المطاعم، الغذائية، اللحوم، وأجهزة المطبخ.';const st=document.querySelector('#homeScreen .section-title h2');if(st)st.textContent='فروع الخدمة الحالية';const ss=document.querySelector('#homeScreen .section-title small');if(ss)ss.textContent='تمت إضافة فرع اللحوم وأجهزة المطبخ';branchesGrid.innerHTML=branches.map((b,i)=>`<button class="branch-card" onclick="openBranch(${i})"><img src="${b.img}" alt="${b.name}"><h3>${b.name}<small>${b.note}</small></h3></button>`).join('')};
+  window.openBranch=function(i){currentBranch=branches[i];lcMode=currentBranch.type;lcRestaurant=null;if(lcMode==='produce'){setCats(produceCats);activeCat=produceCats[0]}else if(lcMode==='grocery'){setCats(groceryCats);activeCat=groceryCats[0]}else if(lcMode==='meat'){setCats(meatCats);activeCat='اللحوم'}else if(lcMode==='kitchen'){setCats(kitchenCats);activeCat='أجهزة المطبخ'}else{setCats(['المطاعم']);activeCat='المطاعم'};if(branchTitle)branchTitle.textContent=currentBranch.name;showScreen('productsScreen');setTimeout(()=>{renderCats();renderProducts()},40)};
+  window.renderCats=function(){const searchBox=document.querySelector('#productsScreen .search');if(searchBox&&!document.getElementById('catToggle'))searchBox.insertAdjacentHTML('afterend','<button class="cat-toggle" id="catToggle" onclick="toggleCatsMenu()"><span>☰ الأقسام</span><b id="catToggleText"></b></button>');const toggle=document.getElementById('catToggle');if(lcMode==='restaurants'){if(toggle)toggle.style.display='none';catsBox.innerHTML='';return}if(toggle)toggle.style.display='flex';if(document.getElementById('catToggleText'))catToggleText.textContent=activeCat;catsBox.innerHTML=cats.map(c=>`<button class="cat-btn ${c===activeCat?'active':''}" onclick="activeCat='${c}';catsBox.classList.remove('open');renderCats();renderProducts();">${c}</button>`).join('')};
+  window.toggleCatsMenu=function(){catsBox.classList.toggle('open')};
+  function renderRestaurants(){productsGrid.className='restaurant-grid';productsGrid.innerHTML=restaurants.map(r=>`<article class="restaurant-card"><img src="${r.img}" alt="${r.name}"><div><h3>${r.name}</h3><p>${r.note}</p><button onclick="openRestaurant('${r.id}')">فتح المنيو</button></div></article>`).join('')}
+  window.openRestaurant=function(id){lcRestaurant=restaurants.find(r=>r.id===id);if(branchTitle)branchTitle.textContent='فرع المطاعم • '+lcRestaurant.name;renderProducts()};
+  window.backRestaurants=function(){lcRestaurant=null;if(branchTitle)branchTitle.textContent='فرع المطاعم';renderProducts()};
+  function renderRestaurantMenu(){const meals=products.filter(p=>p.restaurantId===lcRestaurant.id&&p.menuType==='وجبات');const drinks=products.filter(p=>p.restaurantId===lcRestaurant.id&&p.menuType==='مشروبات');productsGrid.className='restaurant-menu';productsGrid.innerHTML=`<div class="restaurant-menu-head"><div><h2>${lcRestaurant.name}</h2><p>${lcRestaurant.note}</p></div><button onclick="backRestaurants()">رجوع للمطاعم</button></div><div class="swipe-title"><h3>الوجبات</h3><span class="swipe-hint">اسحب ←</span></div><div class="menu-rail">${meals.map(card).join('')}</div><div class="swipe-title"><h3>المشروبات</h3><span class="swipe-hint">اسحب ←</span></div><div class="menu-rail">${drinks.map(card).join('')}</div>`}
+  window.renderProducts=function(){if(!productsGrid)return;if(lcMode==='restaurants'&&!lcRestaurant){renderRestaurants();return}if(lcMode==='restaurants'&&lcRestaurant){renderRestaurantMenu();return}productsGrid.className='products';const q=(productSearch?.value||'').trim().toLowerCase();if(lcMode==='meat'||lcMode==='kitchen'){productsGrid.innerHTML=`<div class="client-empty-branch"><b>${currentBranch.name}</b>هذا الفرع تمت إضافته حالياً بدون منتجات، وسيتم تعبئته بالمرحلة القادمة.</div>`;return}const allowed=lcMode==='produce'?produceCats:groceryCats;const list=products.filter(p=>!p.restaurantId&&allowed.includes(p.cat)&&(q?(p.name.toLowerCase().includes(q)||p.cat.toLowerCase().includes(q)):p.cat===activeCat));productsGrid.innerHTML=list.length?`<div class="client-stage-note">${lcMode==='produce'?'تمت إضافة جميع منتجات المخضر والفواكه بالتفصيل حسب القائمة المرسلة.':'منتجات الفرع بدون أسعار حالياً.'}</div>`+list.map(card).join(''):'<div class="products-fix-empty"><b>لا توجد منتجات</b>لا توجد منتجات داخل هذا القسم حالياً</div>'};
+  window.addToCart=function(id,btn){const p=products.find(x=>x.id===id);if(!p)return;const amount=Math.max(0,Number(getSelectedAmount(id)||1));if(!amount){toast('اكتب كمية صحيحة');return}const type=unitTypeForProduct(p);let item=cart.find(x=>x.id===id);if(item)item.qty=Number((Number(item.qty||0)+amount).toFixed(2));else cart.push({...p,qty:amount,unitType:type,price:0});if(btn){btn.classList.add('added','bump');btn.textContent='تمت الإضافة ✓';setTimeout(()=>btn.classList.remove('bump'),300)}updateCartUI()};
+  window.renderCart=function(){if(!cartList)return;cartList.innerHTML=cart.length?cart.map(x=>`<div class="cart-item"><img src="${x.img}"><div><h4>${x.name}</h4><small>${amountText(x)}${x.restaurantId?' • '+(restaurants.find(r=>r.id===x.restaurantId)?.name||'مطعم'):''}</small></div><div class="qty"><button onclick="changeQty(${x.id},1)">+</button><b>${amountText(x)}</b><button onclick="changeQty(${x.id},-1)">−</button></div></div>`).join(''):'<div class="empty">السلة فارغة حالياً</div>'};
+  window.changeQty=function(id,d){const it=cart.find(x=>x.id===id);if(!it)return;const step=unitStep(it.unitType||unitTypeForProduct(it));it.qty=Number((Number(it.qty||0)+d*step).toFixed(2));if(it.qty<=0)cart=cart.filter(x=>x!==it);updateCartUI();renderProducts()};
+  window.sendOrderWhatsApp=function(){if(!cart.length){toast('السلة فارغة');return}const n=document.getElementById('orderName'),a=document.getElementById('orderArea'),p=document.getElementById('orderPhone');if(!n?.value||!a?.value||!p?.value){toast('أكمل الاسم والمنطقة ورقم الهاتف');return}const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';const lines=cart.map((x,i)=>`${i+1}. ${x.name}\nالكمية: ${amountText(x)}${x.restaurantId?'\nالمطعم: '+(restaurants.find(r=>r.id===x.restaurantId)?.name||''):''}`).join('\n--------------------\n');const title=currentBranch?.name||'هايبر ماركت النخبة';const msg=`طلب جديد - ${title}\n\nالاسم: ${n.value}\nالمنطقة: ${a.value}\nالهاتف: ${p.value}\nنوع الطلب: ${delivery}\n\nالمنتجات:\n${lines}\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;const url=`https://wa.me/${WA||'9647747248826'}?text=${encodeURIComponent(msg)}`;try{cartSheet.classList.remove('show');document.body.classList.remove('cart-page-open');document.documentElement.classList.remove('cart-page-open-html')}catch(e){}cart=[];updateCartUI();renderCart();showScreen('homeScreen');setTimeout(()=>{try{window.open(url,'_blank')}catch(e){location.href=url}},120)};
+  const ps=document.getElementById('productSearch');if(ps)ps.oninput=()=>renderProducts();
+  renderBranches();
+})();
+</script>
+
 </body>
 </html>
 
