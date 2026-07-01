@@ -714,6 +714,169 @@ body.force-scroll-unlock{
 })();
 </script>
 
+
+
+<!-- ===== LINKO ALL DEVICES RESPONSIVE BALANCE PATCH ===== -->
+<style id="linkoAllDevicesResponsivePatch">
+/* هذا الباتش فقط للأحجام والتوافق، لا يلمس وظائف السلة أو الواتساب أو الرصيد */
+html,body{
+  width:100%;
+  min-height:100%;
+  overflow-x:hidden!important;
+}
+body{
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+}
+img{max-width:100%;}
+button,input,select{touch-action:manipulation;}
+
+/* تابلت ولابتوب: نخلي المحتوى داخل مساحة طبيعية بدل ما يتمدد بشكل مبالغ */
+@media(min-width:768px){
+  .app-shell{
+    width:min(1180px,94vw)!important;
+    margin:0 auto!important;
+    padding:18px 18px 120px!important;
+  }
+  .top{
+    margin:-18px -18px 18px!important;
+    padding:16px 18px!important;
+    border-radius:0 0 26px 26px!important;
+  }
+  .welcome-box,.auth-card{
+    width:min(520px,92vw)!important;
+    margin-inline:auto!important;
+  }
+  .hero-banner{
+    padding:22px 24px!important;
+    border-radius:28px!important;
+  }
+  .hero-banner h1{font-size:30px!important;}
+  .phase2-strip,.quick-actions{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+  .branch-grid{
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:14px!important;
+  }
+  .branch-card img{height:130px!important;}
+  .branch-card h3{
+    font-size:14px!important;
+    min-height:64px!important;
+  }
+  #productsScreen .top{
+    display:block!important;
+  }
+  .product-toolbar{
+    grid-template-columns:minmax(0,1fr) 220px!important;
+    align-items:center!important;
+  }
+  .deal-row{
+    justify-content:flex-start!important;
+    overflow-x:auto!important;
+  }
+  .cat-toggle{
+    max-width:420px!important;
+    margin:0 0 14px auto!important;
+  }
+  .cats{
+    right:calc((100vw - min(1180px,94vw))/2 + 18px)!important;
+    left:auto!important;
+    width:min(420px,88vw)!important;
+    bottom:96px!important;
+  }
+  .products{
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:14px!important;
+  }
+  .product{border-radius:20px!important;}
+  .product img{height:145px!important;}
+  .product-body{padding:10px!important;}
+  .product h3{
+    font-size:13px!important;
+    min-height:38px!important;
+  }
+  .price{font-size:13px!important;}
+  .add-btn{
+    min-height:38px!important;
+    font-size:12px!important;
+  }
+  .unit-select,.unit-custom{
+    min-height:36px!important;
+    font-size:12px!important;
+  }
+  .phase3-floating-total,.phase3-floating-total.show{
+    left:calc((100vw - min(1180px,94vw))/2 + 18px)!important;
+    bottom:24px!important;
+    max-width:180px!important;
+  }
+  .float-cart.show{
+    right:calc((100vw - min(1180px,94vw))/2 + 18px)!important;
+    bottom:24px!important;
+  }
+  .sheet{
+    width:min(920px,94vw)!important;
+    left:50%!important;
+    right:auto!important;
+    transform:translateX(-50%)!important;
+    border-radius:30px 30px 0 0!important;
+    padding:18px 18px 120px!important;
+  }
+  .cart-list{grid-template-columns:1fr 1fr!important;}
+  .cart-form,.cart-summary-box{
+    width:min(760px,100%)!important;
+    margin-inline:auto!important;
+  }
+  .admin-panel{
+    width:min(1120px,94vw)!important;
+    padding:20px!important;
+  }
+  .admin-stats{grid-template-columns:repeat(4,1fr)!important;}
+  .request{
+    grid-template-columns:minmax(0,1fr) auto!important;
+  }
+  #productEditorPage .admin-panel,
+  .product-editor-page .admin-panel{
+    width:min(1120px,94vw)!important;
+  }
+  .product-editor-list,#productEditorList{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+
+@media(min-width:1200px){
+  .app-shell{width:min(1240px,92vw)!important;}
+  .branch-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important;}
+  .products{grid-template-columns:repeat(5,minmax(0,1fr))!important;}
+  .product img{height:142px!important;}
+  .cat-toggle{max-width:380px!important;}
+}
+
+@media(min-width:1500px){
+  .app-shell{width:1280px!important;}
+  .products{grid-template-columns:repeat(6,minmax(0,1fr))!important;}
+  .product img{height:138px!important;}
+  .hero-banner h1{font-size:32px!important;}
+}
+
+/* آيباد بالطول والشاشات المتوسطة */
+@media(min-width:721px) and (max-width:1023px){
+  .app-shell{width:min(820px,94vw)!important;}
+  .branch-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;}
+  .products{grid-template-columns:repeat(3,minmax(0,1fr))!important;}
+  .product img{height:132px!important;}
+  .cart-list{grid-template-columns:1fr!important;}
+}
+
+/* موبايلات صغيرة جداً */
+@media(max-width:390px){
+  .products{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  .product img{height:86px!important;}
+  .product h3{font-size:10.5px!important;}
+  .unit-select,.unit-custom{font-size:10px!important;}
+}
+</style>
+
 </body>
 </html>
 
