@@ -2567,3 +2567,109 @@ body.linko-all-products .cats{display:none!important;visibility:hidden!important
   if(typeof renderBranches==='function')renderBranches();
 })();
 </script>
+
+
+<!-- ===== LINKO STAGE 03: REAL KITCHEN APPLIANCES BRANCH - FINAL PATCH ===== -->
+<style id="linkoKitchenStagePatchStyle">
+body.linko-all-products #catToggle,
+body.linko-all-products #catsBox,
+body.linko-all-products .cat-toggle,
+body.linko-all-products .cats{display:none!important;visibility:hidden!important;pointer-events:none!important}
+.linko-kitchen-note{grid-column:1/-1!important;margin:0 0 12px!important;padding:14px 16px!important;border-radius:22px!important;background:#eef6ff!important;border:1px solid #bfdbfe!important;color:#1e3a8a!important;text-align:center!important;font-weight:900!important;line-height:1.8!important}
+.linko-group-band.kitchen{background:linear-gradient(135deg,#111827,#2563eb,#0ea5e9,#111827)!important;background-size:260% 260%!important;animation:linkoBandMove 4.5s ease-in-out infinite!important}
+@media(max-width:520px){.linko-kitchen-note{font-size:13px!important;padding:12px!important;border-radius:18px!important}}
+</style>
+<script id="linkoKitchenStagePatchScript">
+(function(){
+  const IMG_FALL='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22220%22 viewBox=%220 0 300 220%22%3E%3Crect width=%22300%22 height=%22220%22 rx=%2228%22 fill=%22%23f3f4f6%22/%3E%3Ctext x=%22150%22 y=%22125%22 text-anchor=%22middle%22 font-size=%2254%22%3E🛒%3C/text%3E%3C/svg%3E';
+  function svgImg(title,emoji,c1,c2){return 'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520"><defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs><rect width="800" height="520" rx="58" fill="url(#g)"/><circle cx="120" cy="110" r="86" fill="rgba(255,255,255,.12)"/><circle cx="670" cy="390" r="130" fill="rgba(255,255,255,.10)"/><text x="400" y="215" text-anchor="middle" font-size="92">${emoji}</text><text x="400" y="330" text-anchor="middle" font-family="Arial" font-size="46" font-weight="900" fill="white">${title}</text></svg>`)}
+  function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+  const PRODUCE_CATS=['الخضروات الأساسية','خضروات المرق والمحاشي','الخضرة والورقيات','خضروات ورقية للطبخ','خضروات متنوعة','الفواكه الدائمة','فواكه الصيف','فواكه الشتاء','التمور والمحليات','الفواكه والتمور المحلية'];
+  const MEAT_CATS=['اللحوم الحمراء الطازجة','الدواجن والطيور','الأسماك البحرية والنهرية'];
+  const KITCHEN_CATS=['أجهزة المطبخ الرئيسية','أجهزة المطبخ الصغيرة والمحضرات','أجهزة الغسيل والتنظيف','أجهزة التكييف والتهوية','أجهزة الترفيه والمنزل الذكي','العناية الشخصية','أجهزة الطاقة والمنظومات'];
+  const GROCERY_CATS=['المواد الغذائية','المشروبات'];
+  const kitchenData=[
+    ['الثلاجة','أجهزة المطبخ الرئيسية','ثلاجة منزلية رئيسية لحفظ الطعام والمواد اليومية','🧊'],
+    ['المجمدة / الفريزر العمودي أو الأفقي','أجهزة المطبخ الرئيسية','فريزر عمودي أو أفقي للخزن والتجميد','❄️'],
+    ['الطباخ الكهربائي / طباخ غاز بفرن كهربائي','أجهزة المطبخ الرئيسية','طباخ منزلي رئيسي للطبخ والفرن','🔥'],
+    ['غسالة الصحون / الجلاية','أجهزة المطبخ الرئيسية','جلاية صحون كهربائية للمطبخ','🍽️'],
+    ['المايكرويف','أجهزة المطبخ الرئيسية','مايكرويف للتسخين السريع وتحضير الوجبات','📦'],
+    ['الفرن الكهربائي / بلت إن أو منفصل','أجهزة المطبخ الرئيسية','فرن كهربائي للمخبوزات والطبخ المنزلي','♨️'],
+    ['الخلاط الكهربائي ست البيت / محضرة الطعام','أجهزة المطبخ الصغيرة والمحضرات','محضرة طعام متعددة الاستخدامات','🥣'],
+    ['مثرامة اللحم','أجهزة المطبخ الصغيرة والمحضرات','مثرامة لحم للبيت والمطبخ','🥩'],
+    ['القلاية الهوائية / الإير فراير','أجهزة المطبخ الصغيرة والمحضرات','قلاية هوائية لتحضير الأكل بزيت أقل','🍟'],
+    ['الخلاط اليدوي / هاند بلندر','أجهزة المطبخ الصغيرة والمحضرات','خلاط يدوي للشوربات والخلطات','🥤'],
+    ['عجانة كهربائية','أجهزة المطبخ الصغيرة والمحضرات','عجانة للعجين والمعجنات والحلويات','🍞'],
+    ['خلاط الكيك / المضرب الكهربائي','أجهزة المطبخ الصغيرة والمحضرات','مضرب كهربائي للكيك والحلويات','🎂'],
+    ['العصارة الكهربائية','أجهزة المطبخ الصغيرة والمحضرات','عصارة للفواكه والعصائر الطازجة','🍊'],
+    ['مكينة التوست / الجرل أو الكابسة','أجهزة المطبخ الصغيرة والمحضرات','مكينة توست وكبس سندويشات','🥪'],
+    ['الكيتر / الغلاية الكهربائية للمياه','أجهزة المطبخ الصغيرة والمحضرات','غلاية كهربائية للمياه والشاي','☕'],
+    ['صانعة القهوة / ماكينة الإسبريسو','أجهزة المطبخ الصغيرة والمحضرات','ماكينة قهوة وإسبريسو منزلية','☕'],
+    ['مكينة الكليجة / الوافل','أجهزة المطبخ الصغيرة والمحضرات','جهاز للوافل أو الكليجة حسب النوع','🧇'],
+    ['الغسالة / أوتوماتيك أو حوضين','أجهزة الغسيل والتنظيف','غسالة ملابس أوتوماتيك أو عادية حوضين','🧺'],
+    ['المجفف / النشافة الحرارية','أجهزة الغسيل والتنظيف','نشافة حرارية منفصلة للملابس','🌬️'],
+    ['المكنسة الكهربائية / الصصّامة','أجهزة الغسيل والتنظيف','مكنسة كهربائية لتنظيف البيت','🧹'],
+    ['الأوتي / المكواة الكهربائية أو البخارية','أجهزة الغسيل والتنظيف','مكواة عادية أو بخارية عمودية','👕'],
+    ['السبلت / المكيف المنفصل','أجهزة التكييف والتهوية','مكيف جداري أو كنتوري حسب الطلب','❄️'],
+    ['المكيف الشباكي / الويندوز','أجهزة التكييف والتهوية','مكيف شباكي للغرف والمنازل','🪟'],
+    ['المبردة الكهربائية الهوائية','أجهزة التكييف والتهوية','مبردة هوائية كهربائية للبيت','💨'],
+    ['البانكة / المروحة السقفية أو العمودية','أجهزة التكييف والتهوية','مروحة سقفية أو عمودية','🌀'],
+    ['المدفأة الكهربائية / الهيتر','أجهزة التكييف والتهوية','هيتر أو صوبة كهربائية للشتاء','🔥'],
+    ['الفان / مروحة الشفط','أجهزة التكييف والتهوية','مروحة شفط للمطبخ والحمامات','🌬️'],
+    ['التلفزيون / الشاشة الذكية Smart TV','أجهزة الترفيه والمنزل الذكي','شاشة ذكية للترفيه والمنزل','📺'],
+    ['الستلايت / الرسيفر','أجهزة الترفيه والمنزل الذكي','جهاز استقبال القنوات الفضائية','📡'],
+    ['الراوتر','أجهزة الترفيه والمنزل الذكي','جهاز بث الإنترنت داخل المنزل','📶'],
+    ['النانو / جهاز استلام الإنترنت','أجهزة الترفيه والمنزل الذكي','جهاز استلام الإنترنت لمنظومات الأبراج','📡'],
+    ['الساوند بار / النظام الصوتي','أجهزة الترفيه والمنزل الذكي','سماعات ونظام صوتي للمنزل','🔊'],
+    ['البلايستيشن / الإكس بوكس','أجهزة الترفيه والمنزل الذكي','أجهزة الألعاب الإلكترونية','🎮'],
+    ['الشسوار / مجفف الشعر','العناية الشخصية','مجفف شعر للاستخدام الشخصي','💨'],
+    ['الفير / الستريتر','العناية الشخصية','مكواة تمليس أو تجعيد الشعر','💇'],
+    ['ماكينة الحلاقة الكهربائية','العناية الشخصية','ماكينة حلاقة كهربائية للرجال أو النساء','🪒'],
+    ['اليو بي إس UPS','أجهزة الطاقة والمنظومات','جهاز تنظيم وتخزين الطاقة للإنترنت والأجهزة الحساسة','🔋'],
+    ['الرافع / رافع الفولتية','أجهزة الطاقة والمنظومات','رافع فولتية لتنظيم الكهرباء الوطنية','⚡'],
+    ['العاكسة Inverter','أجهزة الطاقة والمنظومات','تحويل طاقة البطاريات إلى كهرباء منزلية','🔌'],
+    ['الواتر بيمب / مضخة الماء الكهربائية','أجهزة الطاقة والمنظومات','ماتور أو مضخة ماء كهربائية','💧'],
+    ['الكيزر / سخان الماء الكهربائي','أجهزة الطاقة والمنظومات','سخان ماء كهربائي للشتاء','🚿']
+  ];
+  function installKitchen(){
+    if(!Array.isArray(products))return;
+    let max=products.reduce((m,p)=>Math.max(m,Number(p.id)||0),0);
+    kitchenData.forEach(row=>{if(!products.some(p=>p.name===row[0]))products.push({id:++max,name:row[0],cat:row[1],desc:row[2],badge:'متوفر',img:svgImg(row[0],row[3],'#111827','#2563eb'),unitKind:'piece',price:0});});
+    const b=branches.find(x=>String(x.name||'').includes('أجهزة المطبخ')||String(x.name||'').includes('اجهزة المطبخ'));
+    if(b){b.type='kitchen';b.cat='أجهزة المطبخ';b.note='أجهزة مطبخ، منزل، تكييف، طاقة ومنظومات — بدون أسعار حالياً';b.img=svgImg('فرع أجهزة المطبخ','🍳','#111827','#2563eb');}
+  }
+  installKitchen();
+  let linkoType='produce', linkoRestaurant=null;
+  function typeOfBranch(b){
+    if(!b)return''; const n=String(b.name||'');
+    if(n.includes('المخضر')||n.includes('الفواكه'))return'produce';
+    if(n.includes('المطاعم'))return'restaurants';
+    if(n.includes('الغذائية'))return'grocery';
+    if(n.includes('اللحوم'))return'meat';
+    if(n.includes('أجهزة المطبخ')||n.includes('اجهزة المطبخ'))return'kitchen';
+    if(b.type&&b.type!=='empty')return b.type;
+    return'empty';
+  }
+  function isAllProductsMode(){return ['produce','meat','kitchen'].includes(linkoType)}
+  function setBody(){document.body.classList.toggle('linko-all-products',isAllProductsMode());const cats=document.getElementById('catsBox'),tog=document.getElementById('catToggle');if(isAllProductsMode()){if(cats){cats.classList.remove('open');cats.style.display='none'}if(tog)tog.style.display='none'}else{if(cats)cats.style.display='';if(tog)tog.style.display=''}}
+  function unitType(p){if(p.unitKind)return p.unitKind;if(MEAT_CATS.includes(p.cat)||PRODUCE_CATS.includes(p.cat))return'kg';return'piece'}
+  window.unitTypeForProduct=unitType; window.unitStep=function(t){return t==='kg'?0.25:1}; window.unitTitle=function(t){return t==='kg'?'كغم':'عدد'};
+  window.amountText=function(item){const t=item.unitType||unitType(item),q=Number(item.qty||1);if(t==='kg'){if(q===.25)return'ربع كيلو';if(q===.5)return'نصف كيلو';if(q===.75)return'ثلاثة أرباع كيلو';return(Number.isInteger(q)?q:q.toLocaleString('ar-IQ'))+' كغم'}return q+' '+(q>1?'قطع':'قطعة')};
+  window.getSelectedAmount=function(id){const c=document.getElementById('unitCustom_'+id),v=Number(c?.value||0);if(v>0)return v;return Number(document.getElementById('unitSelect_'+id)?.value||1)};
+  function unitBox(p){const t=unitType(p);if(t==='kg')return `<div class="unit-smart"><select id="unitSelect_${p.id}"><option value="0.25">ربع كيلو</option><option value="0.5">نصف كيلو</option><option value="0.75">ثلاثة أرباع</option><option value="1" selected>1 كيلو</option><option value="1.25">كيلو وربع</option><option value="2">2 كيلو</option><option value="5">5 كيلو</option></select><input id="unitCustom_${p.id}" type="number" inputmode="decimal" min="0.25" step="0.25" placeholder="اكتب كغم"></div><div class="unit-note">اختر جاهز أو اكتب الكمية</div>`;return `<div class="unit-smart"><select id="unitSelect_${p.id}"><option value="1" selected>1 عدد</option><option value="2">2 عدد</option><option value="3">3 عدد</option><option value="6">6 عدد</option></select><input id="unitCustom_${p.id}" type="number" inputmode="numeric" min="1" step="1" placeholder="اكتب عدد"></div><div class="unit-note">اختر جاهز أو اكتب العدد</div>`}
+  function card(p){const inCart=Array.isArray(cart)?cart.find(x=>String(x.id)===String(p.id)):null;return `<article class="product"><span class="product-badge">${esc(p.badge||'متوفر')}</span><img src="${p.img||IMG_FALL}" alt="${esc(p.name)}" onerror="this.src='${IMG_FALL}'"><div class="product-body"><h3>${esc(p.name)}</h3>${p.desc?`<div class="unit-note">${esc(p.desc)}</div>`:''}<div class="unit-box">${unitBox(p)}</div><button class="add-btn ${inCart?'added':''}" onclick="addToCart(${p.id},this)">${inCart?'تمت الإضافة ✓':'إضافة للسلة'}</button></div></article>`}
+  function renderGrouped(cats,note,kind){const grid=document.getElementById('productsGrid');if(!grid)return;grid.className='products';const q=(document.getElementById('productSearch')?.value||'').trim().toLowerCase();const all=products.filter(p=>!p.restaurantId&&cats.includes(p.cat));let html=`<div class="${kind==='kitchen'?'linko-kitchen-note':'linko-note-box'}">${note} — عدد المنتجات: ${all.length}</div>`;if(q){const found=all.filter(p=>String(p.name||'').toLowerCase().includes(q)||String(p.cat||'').toLowerCase().includes(q)||String(p.desc||'').toLowerCase().includes(q));html+=found.length?found.map(card).join(''):'<div class="products-fix-empty">لا توجد منتجات مطابقة للبحث</div>';grid.innerHTML=html;return}cats.forEach(cat=>{const list=all.filter(p=>p.cat===cat);if(list.length)html+=`<div class="linko-group-band ${kind==='kitchen'?'kitchen':''}"><span>${esc(cat)}</span><small>${list.length} منتج</small></div>`+list.map(card).join('')});grid.innerHTML=html;}
+  function ensureButcher(){const search=document.querySelector('#productsScreen .search');if(!search)return;let box=document.getElementById('butcherBox');if(linkoType==='meat'){if(!box)search.insertAdjacentHTML('afterend',`<div class="linko-butcher-box" id="butcherBox"><label>اكتب اسم الكصاب الذي تريد الشراء منه (اختياري)</label><input id="butcherName" placeholder="مثال: قصاب أبو أحمد"></div>`)}else if(box)box.remove()}
+  window.openBranch=function(i){currentBranch=branches[i];linkoType=typeOfBranch(currentBranch);linkoRestaurant=null;if(branchTitle)branchTitle.textContent=currentBranch.name;if(typeof showScreen==='function')showScreen('productsScreen');setTimeout(()=>{setBody();ensureButcher();renderCats();renderProducts();},60)};
+  window.renderCats=function(){setBody();if(isAllProductsMode()){const c=document.getElementById('catsBox');if(c){c.innerHTML='';c.classList.remove('open')}return}const box=document.getElementById('catsBox');if(!box)return;let arr=linkoType==='grocery'?GROCERY_CATS:[];box.innerHTML=arr.map(c=>`<button class="cat-btn ${c===activeCat?'active':''}" onclick="activeCat='${c}';document.getElementById('catsBox')?.classList.remove('open');renderProducts();">${c}</button>`).join('')};
+  function restaurantsFromProducts(){const map={};products.filter(p=>p.restaurantId).forEach(p=>{if(!map[p.restaurantId])map[p.restaurantId]={id:p.restaurantId,name:String(p.cat||'').replace(/^وجبات |^مشروبات /,'')||p.restaurantId,note:'منيو خاص بالمطعم',img:svgImg(String(p.cat||'مطعم').replace(/^وجبات |^مشروبات /,''),'🍽️','#78350f','#f59e0b')}});return Object.values(map)}
+  window.openRestaurant=function(id){linkoRestaurant=restaurantsFromProducts().find(r=>r.id===id)||{id,name:id,note:''};if(branchTitle)branchTitle.textContent=linkoRestaurant.name;renderProducts()};
+  window.backRestaurants=function(){linkoRestaurant=null;if(branchTitle)branchTitle.textContent='فرع المطاعم';renderProducts()};
+  window.renderProducts=function(){setBody();ensureButcher();if(linkoType==='produce'){renderGrouped(PRODUCE_CATS,'كل منتجات المخضر والفواكه ظاهرة مباشرة بدون اختيار أقسام','produce');return}if(linkoType==='meat'){renderGrouped(MEAT_CATS,'تمت إضافة جميع منتجات اللحوم والدواجن والأسماك بالتفصيل','meat');return}if(linkoType==='kitchen'){renderGrouped(KITCHEN_CATS,'تمت إضافة جميع منتجات فرع أجهزة المطبخ والأجهزة المنزلية بالتفصيل','kitchen');return}const grid=document.getElementById('productsGrid');if(!grid)return;if(linkoType==='empty'){grid.className='products';grid.innerHTML=`<div class="linko-empty-branch-real"><b>${esc(currentBranch?.name||'فرع')}</b>هذا الفرع مضاف حالياً بدون منتجات، وسيتم تعبئته لاحقاً.</div>`;return}if(linkoType==='grocery'){grid.className='products';const q=(document.getElementById('productSearch')?.value||'').trim().toLowerCase();if(!activeCat||!GROCERY_CATS.includes(activeCat))activeCat=GROCERY_CATS[0];let list=products.filter(p=>!p.restaurantId&&GROCERY_CATS.includes(p.cat)&&(q?(p.name.toLowerCase().includes(q)||p.cat.toLowerCase().includes(q)):p.cat===activeCat));grid.innerHTML=list.length?list.map(card).join(''):'<div class="products-fix-empty">لا توجد منتجات داخل هذا القسم</div>';return}if(linkoType==='restaurants'){if(!linkoRestaurant){grid.className='restaurant-grid';grid.innerHTML=restaurantsFromProducts().map(r=>`<button class="restaurant-card" onclick="openRestaurant('${r.id}')"><img src="${r.img}" alt="${esc(r.name)}"><h3>${esc(r.name)}</h3><p>${esc(r.note)}</p></button>`).join('');return}grid.className='restaurant-menu';const meals=products.filter(p=>p.restaurantId===linkoRestaurant.id&&p.menuType==='وجبات'),drinks=products.filter(p=>p.restaurantId===linkoRestaurant.id&&p.menuType==='مشروبات');grid.innerHTML=`<div class="restaurant-menu-head"><div><h2>${esc(linkoRestaurant.name)}</h2><p>${esc(linkoRestaurant.note)}</p></div><button onclick="backRestaurants()">رجوع للمطاعم</button></div><div class="swipe-title"><h3>الوجبات</h3><span class="swipe-hint">اسحب ←</span></div><div class="menu-rail">${meals.map(card).join('')}</div><div class="swipe-title"><h3>المشروبات</h3><span class="swipe-hint">اسحب ←</span></div><div class="menu-rail">${drinks.map(card).join('')}</div>`}}
+  window.addToCart=function(id,btn){const p=products.find(x=>String(x.id)===String(id));if(!p)return;const amount=Math.max(0,Number(getSelectedAmount(id)||1));if(!amount){if(typeof toast==='function')toast('اكتب كمية صحيحة');return}const t=unitType(p);let item=cart.find(x=>String(x.id)===String(id));if(item)item.qty=Number((Number(item.qty||0)+amount).toFixed(2));else cart.push({...p,qty:amount,unitType:t,price:0,butcher:document.getElementById('butcherName')?.value||''});if(btn){btn.classList.add('added','bump');btn.textContent='تمت الإضافة ✓';setTimeout(()=>btn.classList.remove('bump'),300)}updateCartUI()};
+  window.sendOrderWhatsApp=function(){if(!cart.length){toast('السلة فارغة');return}const n=document.getElementById('orderName'),a=document.getElementById('orderArea'),ph=document.getElementById('orderPhone');if(!n?.value||!a?.value||!ph?.value){toast('أكمل الاسم والمنطقة ورقم الهاتف');return}const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';const butcher=document.getElementById('butcherName')?.value||cart.find(x=>x.butcher)?.butcher||'';const lines=cart.map((x,i)=>`${i+1}. ${x.name}\nالكمية: ${amountText(x)}${x.restaurantId?'\nالمطعم: '+String(x.cat||'').replace(/^وجبات |^مشروبات /,''):''}${x.desc?'\nملاحظة المنتج: '+x.desc:''}`).join('\n--------------------\n');const msg=`طلب جديد - ${currentBranch?.name||'هايبر ماركت النخبة'}\n\nالاسم: ${n.value}\nالمنطقة: ${a.value}\nالهاتف: ${ph.value}\nنوع الطلب: ${delivery}${butcher?'\nالكصاب المطلوب: '+butcher:''}\n\nالمنتجات:\n${lines}\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;try{cartSheet.classList.remove('show');document.body.classList.remove('cart-page-open');document.documentElement.classList.remove('cart-page-open-html')}catch(e){}cart=[];updateCartUI();if(typeof renderCart==='function')renderCart();showScreen('homeScreen');setTimeout(()=>{window.open(`https://wa.me/${WA||'9647747248826'}?text=${encodeURIComponent(msg)}`,'_blank')},120)};
+  const ps=document.getElementById('productSearch');if(ps)ps.oninput=()=>renderProducts();
+  setInterval(setBody,500);
+  if(typeof renderBranches==='function')renderBranches();
+})();
+</script>
