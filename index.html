@@ -1856,6 +1856,193 @@ body.linko-grocery-all .cats{display:none!important;visibility:hidden!important;
 })();
 </script>
 
+
+
+<!-- ===== LINKO ABSOLUTE FINAL PATCH: CART INPUT STAY + WHATSAPP ACTIVE ===== -->
+<style id="linkoAbsoluteFinalCartWhatsappPatchStyle">
+  #cartSheet.bottom-sheet.show{
+    display:block!important;
+    position:fixed!important;
+    inset:0!important;
+    z-index:99999!important;
+    background:#f6f7f9!important;
+    overflow:hidden!important;
+    pointer-events:auto!important;
+  }
+  #cartSheet.bottom-sheet.show .sheet{
+    position:absolute!important;
+    inset:0!important;
+    width:100%!important;
+    height:100%!important;
+    max-height:none!important;
+    min-height:0!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    -webkit-overflow-scrolling:touch!important;
+    touch-action:pan-y!important;
+    padding:16px 14px calc(260px + env(safe-area-inset-bottom))!important;
+    background:#f6f7f9!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    transform:none!important;
+    left:0!important;
+    right:0!important;
+  }
+  #cartSheet .sheet-head{
+    position:sticky!important;
+    top:0!important;
+    z-index:60!important;
+    background:rgba(246,247,249,.98)!important;
+    border-bottom:1px solid rgba(228,231,236,.95)!important;
+  }
+  #cartSheet input,
+  #cartSheet textarea,
+  #cartSheet select,
+  #cartSheet button,
+  #cartSheet label{
+    pointer-events:auto!important;
+    touch-action:manipulation!important;
+  }
+  #cartSheet button[onclick*="sendOrderWhatsApp"],
+  button[onclick="sendOrderWhatsApp()"]{
+    opacity:1!important;
+    pointer-events:auto!important;
+    filter:none!important;
+    cursor:pointer!important;
+    position:relative!important;
+    z-index:80!important;
+  }
+</style>
+<script id="linkoAbsoluteFinalCartWhatsappPatchScript">
+(function(){
+  'use strict';
+  const FINAL_WA_PHONE = '9647887624967';
+  const $ = id => document.getElementById(id);
+  const clean = v => String(v == null ? '' : v).replace(/[<>`]/g,'').trim();
+  const notify = msg => { try{ if(typeof toast==='function') toast(msg); else alert(msg); }catch(e){ alert(msg); } };
+  function isCartOpen(){ const c=$('cartSheet'); return !!(c && c.classList.contains('show')); }
+
+  // منع سكربتات قديمة من إغلاق السلة عند لمس/تعديل الاسم أو المنطقة أو الهاتف داخل السلة
+  ['focus','focusin','visibilitychange','pageshow'].forEach(ev=>{
+    window.addEventListener(ev,function(e){
+      if(isCartOpen()){
+        try{ e.stopImmediatePropagation(); }catch(_){ }
+      }
+    }, true);
+    document.addEventListener(ev,function(e){
+      if(isCartOpen() && (e.target === window || $('cartSheet')?.contains(e.target))){
+        try{ e.stopImmediatePropagation(); }catch(_){ }
+      }
+    }, true);
+  });
+
+  function openCartFixed(){
+    const overlay=$('cartSheet'), sheet=overlay && overlay.querySelector('.sheet');
+    if(!overlay || !sheet) return;
+    try{ if(typeof renderCart==='function') renderCart(); }catch(e){ console.warn(e); }
+    overlay.style.display='block';
+    overlay.style.pointerEvents='auto';
+    overlay.classList.add('show');
+    document.body.classList.add('cart-page-open');
+    document.documentElement.classList.add('cart-page-open-html');
+    document.body.style.position='static';
+    document.body.style.overflowY='auto';
+    document.body.style.height='auto';
+    requestAnimationFrame(()=>{ try{ sheet.scrollTop=0; }catch(e){} });
+    const sendBtn=document.querySelector('#cartSheet button[onclick*="sendOrderWhatsApp"]');
+    if(sendBtn){ sendBtn.disabled=false; sendBtn.type='button'; sendBtn.style.pointerEvents='auto'; sendBtn.style.opacity='1'; }
+  }
+  function closeCartFixed(){
+    const overlay=$('cartSheet');
+    if(overlay){
+      overlay.classList.remove('show');
+      overlay.style.display='none';
+      overlay.style.pointerEvents='none';
+    }
+    document.body.classList.remove('cart-page-open');
+    document.documentElement.classList.remove('cart-page-open-html');
+    document.body.style.position='static';
+    document.body.style.overflowY='auto';
+    document.body.style.height='auto';
+  }
+  window.openCart = openCartFixed;
+  window.closeCart = closeCartFixed;
+
+  function amountOf(item){
+    try{ if(typeof amountText==='function') return amountText(item); }catch(e){}
+    const q = Number(item && item.qty || 1);
+    const t = item && (item.unitType || item.unitKind || 'piece');
+    if(t==='kg'){
+      if(q===0.25) return 'ربع كيلو';
+      if(q===0.5) return 'نصف كيلو';
+      if(q===0.75) return 'ثلاثة أرباع كيلو';
+      return (Number.isInteger(q)?q:q.toLocaleString('ar-IQ'))+' كغم';
+    }
+    if(t==='pack') return q+' عبوة';
+    if(t==='size') return (item.restSize?item.restSize+' × ':'')+q;
+    return q+' عدد';
+  }
+  function currentBranchName(){
+    try{ if(typeof currentBranch!=='undefined' && currentBranch && currentBranch.name) return clean(currentBranch.name); }catch(e){}
+    return clean($('branchTitle')?.textContent) || 'هايبر ماركت النخبة';
+  }
+  function buildLines(){
+    return (Array.isArray(cart)?cart:[]).map((x,i)=>{
+      let s=(i+1)+'. '+clean(x.name)+'\nالكمية: '+amountOf(x);
+      if(x.restaurantName) s+='\nالمطعم المطلوب: '+clean(x.restaurantName);
+      if(x.butcher) s+='\nالكصاب المطلوب: '+clean(x.butcher);
+      if(x.restOption) s+='\nالتفاصيل: '+clean(x.restOption);
+      if(x.pastryOption) s+='\nالنوع/الحشوة: '+clean(x.pastryOption);
+      if(x.brand) s+='\nالماركة/النوع: '+clean(x.brand);
+      if(x.customerNote) s+='\nملاحظة الزبون: '+clean(x.customerNote);
+      if(x.groceryNote) s+='\nملاحظة الزبون: '+clean(x.groceryNote);
+      if(x.pastryNote) s+='\nملاحظة الزبون: '+clean(x.pastryNote);
+      if(x.desc) s+='\nتفاصيل: '+clean(x.desc);
+      return s;
+    }).join('\n--------------------\n');
+  }
+
+  window.sendOrderWhatsApp = function(){
+    try{
+      if(!Array.isArray(cart) || !cart.length){ notify('السلة فارغة'); return; }
+      const n=$('orderName'), a=$('orderArea'), ph=$('orderPhone');
+      const name=clean(n && n.value), area=clean(a && a.value), phone=clean(ph && ph.value);
+      if(!name || !area || !phone){ notify('أكمل الاسم والمنطقة ورقم الهاتف'); return; }
+      const delivery=clean(document.querySelector('input[name="deliveryType"]:checked')?.value || 'توصيل');
+      let extra='';
+      const hasRestaurant = cart.some(x=>x.linkoRestaurantUnified || x.restaurantName) || /المطاعم/.test(currentBranchName());
+      const restName=clean((cart.find(x=>x.restaurantName)||{}).restaurantName || $('restaurantNameRequired')?.value || $('restaurantName')?.value || $('restName')?.value || '');
+      if(hasRestaurant){
+        if(!restName){ notify('اكتب اسم المطعم المطلوب'); return; }
+        extra+='\nالمطعم المطلوب: '+restName+'\nتنبيه للزبون: الأفضل الطلب من مطعم واحد حتى لا يتأخر تجهيز ووصول الطلب.';
+      }
+      const butcher=clean($('butcherName')?.value || (cart.find(x=>x.butcher)||{}).butcher || '');
+      if(butcher) extra+='\nالكصاب المطلوب: '+butcher;
+      const msg='طلب جديد - '+currentBranchName()+'\n\nالاسم: '+name+'\nالمنطقة: '+area+'\nالهاتف: '+phone+'\nنوع الطلب: '+delivery+extra+'\n\nالمنتجات:\n'+buildLines()+'\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.';
+      const url='https://wa.me/'+FINAL_WA_PHONE+'?text='+encodeURIComponent(msg);
+      closeCartFixed();
+      try{ cart.length=0; if(typeof updateCartUI==='function') updateCartUI(); if(typeof renderCart==='function') renderCart(); }catch(e){}
+      try{ if(typeof showScreen==='function') showScreen('homeScreen'); }catch(e){}
+      const opened = window.open(url,'_blank');
+      if(!opened){ window.location.href=url; }
+    }catch(err){
+      console.error(err);
+      notify('صار خطأ بالإرسال، أعد المحاولة');
+    }
+  };
+
+  // تأكيد نهائي لحالة زر واتساب بعد كل تحديث للسلة
+  const oldUpdate = window.updateCartUI;
+  if(typeof oldUpdate==='function'){
+    window.updateCartUI=function(){
+      oldUpdate();
+      const btn=document.querySelector('#cartSheet button[onclick*="sendOrderWhatsApp"]');
+      if(btn){ btn.disabled=false; btn.type='button'; btn.style.pointerEvents='auto'; btn.style.opacity='1'; }
+    };
+  }
+})();
+</script>
+
 </body>
 </html>
 
