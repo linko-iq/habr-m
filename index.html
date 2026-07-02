@@ -1289,6 +1289,172 @@ body.produce-all-mode #catsBox{
 })();
 </script>
 
+
+
+<!-- ===== LINKO FINAL ABSOLUTE FIX V7: PRODUCE PAGE WITHOUT CATEGORY CHOICE ===== -->
+<style id="linkoFinalNoProduceCategoriesV7Style">
+/* داخل فرع المخضر والفواكه: لا نعرض زر الأقسام ولا القائمة نهائياً */
+body.produce-all-mode #catToggle,
+body.produce-all-mode #catsBox,
+body.produce-all-mode .cats,
+body.produce-all-mode .cat-toggle{
+  display:none!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+}
+.produce-section-title-v7{
+  grid-column:1/-1!important;
+  margin:14px 0 6px!important;
+  padding:13px 16px!important;
+  border-radius:22px!important;
+  color:#fff!important;
+  font-weight:900!important;
+  background:linear-gradient(135deg,#064e3b,#10b981,#f59e0b)!important;
+  background-size:220% 220%!important;
+  animation:produceBandMove 4s ease-in-out infinite!important;
+  box-shadow:0 16px 36px rgba(15,81,50,.18)!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+}
+.produce-section-title-v7 small{font-size:12px!important;opacity:.95!important;font-weight:900!important;white-space:nowrap!important}
+.produce-all-note-v7{
+  grid-column:1/-1!important;
+  margin:0 0 8px!important;
+  padding:12px 14px!important;
+  border-radius:20px!important;
+  background:#ecfdf3!important;
+  border:1px solid #86efac!important;
+  color:#087443!important;
+  font-weight:900!important;
+  text-align:center!important;
+  line-height:1.7!important;
+}
+@keyframes produceBandMove{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@media(max-width:520px){
+  .produce-section-title-v7{padding:11px 12px!important;border-radius:18px!important;font-size:13px!important}
+  .produce-section-title-v7 small{font-size:10px!important}
+}
+</style>
+<script id="linkoFinalNoProduceCategoriesV7Script">
+(function(){
+  const PRODUCE_CATS_V7 = ['الخضروات الأساسية','خضروات المرق والمحاشي','الخضرة والورقيات','خضروات ورقية للطبخ','خضروات متنوعة','الفواكه الدائمة','فواكه الصيف','فواكه الشتاء','التمور والمحليات'];
+  function escV7(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+  function isProduceBranchV7(){
+    try{
+      return !!(typeof currentBranch !== 'undefined' && currentBranch && (currentBranch.type === 'produce' || String(currentBranch.name||'').includes('المخضر') || String(currentBranch.name||'').includes('الفواكه')));
+    }catch(e){return false;}
+  }
+  function fallbackImgV7(name){
+    const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="320" height="230" viewBox="0 0 320 230"><defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#0f5132"/><stop offset="1" stop-color="#10b981"/></linearGradient></defs><rect width="320" height="230" rx="34" fill="url(#g)"/><circle cx="58" cy="42" r="44" fill="rgba(255,255,255,.14)"/><circle cx="252" cy="182" r="70" fill="rgba(255,255,255,.12)"/><text x="160" y="104" text-anchor="middle" font-size="44">🥬</text><text x="160" y="156" text-anchor="middle" font-family="Arial" font-size="20" font-weight="900" fill="white">${String(name||'منتج').slice(0,20)}</text></svg>`;
+    return 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg);
+  }
+  function unitTypeV7(p){
+    try{ if(typeof unitTypeForProduct==='function') return unitTypeForProduct(p); }catch(e){}
+    return 'kg';
+  }
+  function unitTitleV7(t){
+    try{ if(typeof unitTitle==='function') return unitTitle(t); }catch(e){}
+    return t==='kg'?'كغم':'عدد';
+  }
+  function unitBoxV7(p){
+    const t=unitTypeV7(p);
+    if(t==='kg'){
+      return `<div class="unit-smart"><select id="unitSelect_${p.id}"><option value="0.25">ربع كيلو</option><option value="0.5">نصف كيلو</option><option value="0.75">ثلاثة أرباع</option><option value="1" selected>1 كيلو</option><option value="1.25">كيلو وربع</option><option value="2">2 كيلو</option><option value="5">5 كيلو</option></select><input id="unitCustom_${p.id}" type="number" inputmode="decimal" min="0.25" step="0.25" placeholder="اكتب كغم"></div><div class="unit-note">اختر جاهز أو اكتب الكمية</div>`;
+    }
+    return `<div class="unit-smart"><select id="unitSelect_${p.id}"><option value="1" selected>1 ${unitTitleV7(t)}</option><option value="2">2 ${unitTitleV7(t)}</option><option value="3">3 ${unitTitleV7(t)}</option><option value="6">6 ${unitTitleV7(t)}</option></select><input id="unitCustom_${p.id}" type="number" inputmode="numeric" min="1" step="1" placeholder="اكتب عدد"></div><div class="unit-note">اختر جاهز أو اكتب العدد</div>`;
+  }
+  function cardV7(p){
+    let inCart=null; try{ inCart=(Array.isArray(cart)?cart:[]).find(x=>String(x.id)===String(p.id)); }catch(e){}
+    return `<article class="product"><span class="product-badge">${escV7(p.badge||'متوفر')}</span><img src="${p.img||fallbackImgV7(p.name)}" alt="${escV7(p.name)}" onerror="this.src='${fallbackImgV7('منتج')}'"><div class="product-body"><h3>${escV7(p.name)}</h3><div class="unit-box">${unitBoxV7(p)}</div><button class="add-btn ${inCart?'added':''}" onclick="addToCart(${p.id},this)">${inCart?'تمت الإضافة ✓':'إضافة للسلة'}</button></div></article>`;
+  }
+  function closeProduceCatsV7(){
+    try{
+      const toggle=document.getElementById('catToggle');
+      const cats=document.getElementById('catsBox');
+      if(toggle) toggle.style.display='none';
+      if(cats){ cats.classList.remove('open'); cats.style.display='none'; }
+      document.body.classList.add('produce-all-mode');
+    }catch(e){}
+  }
+  function restoreCatsIfNeededV7(){
+    try{
+      if(!isProduceBranchV7()){
+        document.body.classList.remove('produce-all-mode');
+        const toggle=document.getElementById('catToggle');
+        const cats=document.getElementById('catsBox');
+        if(toggle) toggle.style.display='';
+        if(cats) cats.style.display='';
+      }
+    }catch(e){}
+  }
+  const previousOpenBranchV7 = window.openBranch;
+  window.openBranch=function(i){
+    if(typeof previousOpenBranchV7==='function') previousOpenBranchV7(i);
+    setTimeout(function(){
+      if(isProduceBranchV7()){
+        closeProduceCatsV7();
+        if(document.getElementById('branchTitle')) branchTitle.textContent='فرع المخضر والفواكه';
+        window.renderProducts();
+      }else{
+        restoreCatsIfNeededV7();
+      }
+    },80);
+  };
+  const previousRenderCatsV7 = window.renderCats;
+  window.renderCats=function(){
+    if(isProduceBranchV7()){
+      closeProduceCatsV7();
+      return;
+    }
+    restoreCatsIfNeededV7();
+    if(typeof previousRenderCatsV7==='function') previousRenderCatsV7();
+  };
+  const previousToggleCatsV7 = window.toggleCatsMenu;
+  window.toggleCatsMenu=function(){
+    if(isProduceBranchV7()){
+      closeProduceCatsV7();
+      return;
+    }
+    if(typeof previousToggleCatsV7==='function') previousToggleCatsV7();
+  };
+  const previousRenderProductsV7 = window.renderProducts;
+  window.renderProducts=function(){
+    if(!isProduceBranchV7()){
+      restoreCatsIfNeededV7();
+      if(typeof previousRenderProductsV7==='function') return previousRenderProductsV7();
+      return;
+    }
+    closeProduceCatsV7();
+    const grid=document.getElementById('productsGrid');
+    if(!grid) return;
+    grid.className='products';
+    const search=(document.getElementById('productSearch')?.value||'').trim().toLowerCase();
+    let all=[];
+    try{ all=(Array.isArray(products)?products:[]).filter(p=>!p.restaurantId && PRODUCE_CATS_V7.includes(p.cat)); }catch(e){ all=[]; }
+    let html=`<div class="produce-all-note-v7">كل منتجات المخضر والفواكه ظاهرة هنا بدون اختيار أقسام — عدد المنتجات: ${all.length}</div>`;
+    if(search){
+      const found=all.filter(p=>String(p.name||'').toLowerCase().includes(search)||String(p.cat||'').toLowerCase().includes(search));
+      html += found.length ? found.map(cardV7).join('') : '<div class="products-fix-empty">لا توجد منتجات مطابقة للبحث</div>';
+      grid.innerHTML=html;
+      const pc=document.getElementById('productsCount'); if(pc) pc.textContent=`${found.length} منتج ظاهر ضمن نتائج البحث`;
+      return;
+    }
+    PRODUCE_CATS_V7.forEach(cat=>{
+      const list=all.filter(p=>p.cat===cat);
+      if(!list.length) return;
+      html += `<div class="produce-section-title-v7"><span>${escV7(cat)}</span><small>${list.length} منتج</small></div>` + list.map(cardV7).join('');
+    });
+    grid.innerHTML=html;
+    const pc=document.getElementById('productsCount'); if(pc) pc.textContent=`${all.length} منتج ظاهر ضمن فرع المخضر والفواكه`;
+  };
+  const ps=document.getElementById('productSearch');
+  if(ps) ps.oninput=function(){ window.renderProducts(); };
+  setInterval(function(){ if(isProduceBranchV7()) closeProduceCatsV7(); },700);
+})();
+</script>
+
 </body>
 </html>
 
