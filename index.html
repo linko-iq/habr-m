@@ -1889,6 +1889,127 @@ button,input,select,textarea{max-width:100%;touch-action:manipulation;}
 })();
 </script>
 
+
+
+<!-- ===== MEDINA REAL ROOT FIX: CART DOES NOT CLOSE ON INPUT + CLEAR BEFORE WHATSAPP ===== -->
+<style id="medinaRealCartRootFixStyle">
+  #cartSheet.show{display:block!important;pointer-events:auto!important;}
+  #cartSheet.show .sheet{overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;touch-action:pan-y!important;}
+  #medinaWhatsappSendFinal{width:100%;min-height:58px;border-radius:18px;background:linear-gradient(135deg,#25D366,#128C7E)!important;color:#fff!important;font-weight:900;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;box-shadow:0 14px 30px rgba(18,140,126,.22)}
+  .medina-final-wa-note{margin-top:10px;padding:10px 12px;border-radius:16px;background:#ecfdf3;border:1px solid #bbf7d0;color:#087443;font-weight:900;text-align:center;font-size:12px;line-height:1.6}
+</style>
+<script id="medinaRealCartRootFixScript">
+(function(){
+  'use strict';
+  const WA_PHONE='9647887624967';
+  const FLAGS=['medina_order_sent_clear_cart_v1','medina_final_order_sent_clear_v3','medina_cart_clear_after_whatsapp','medina_order_sent'];
+  const $=id=>document.getElementById(id);
+  function clean(v){return String(v==null?'':v).replace(/[<>]/g,'').trim();}
+  function notify(m){try{ if(typeof toast==='function') toast(m); else alert(m); }catch(e){alert(m)}}
+  function removeFlags(){try{FLAGS.forEach(f=>{sessionStorage.removeItem(f);localStorage.removeItem(f);});}catch(e){}}
+  function unlockOnly(){
+    try{document.body.classList.remove('cart-page-open','linko-clean-cart-open','force-scroll-unlock');document.documentElement.classList.remove('cart-page-open-html','linko-clean-cart-open');}catch(e){}
+    try{document.body.style.position='';document.body.style.overflow='';document.body.style.overflowY='';document.body.style.height='';document.documentElement.style.position='';document.documentElement.style.overflowY='';document.documentElement.style.height='';}catch(e){}
+  }
+  function openCartSafe(){
+    removeFlags();
+    const o=$('cartSheet'),s=o&&o.querySelector('.sheet'); if(!o||!s)return;
+    try{ if(typeof renderCart==='function') renderCart(); }catch(e){}
+    o.classList.add('show','linko-clean-cart');
+    o.style.display='block'; o.style.pointerEvents='auto';
+    unlockOnly();
+    document.body.classList.add('linko-clean-cart-open');
+    document.documentElement.classList.add('linko-clean-cart-open');
+    ensureWhatsappButton();
+    setTimeout(()=>{try{s.scrollTop=0;}catch(e){}},20);
+  }
+  function closeCartSafe(){
+    const o=$('cartSheet'); if(o){o.classList.remove('show');o.style.display='none';o.style.pointerEvents='none';}
+    unlockOnly();
+  }
+  function getCart(){try{return Array.isArray(cart)?cart:[]}catch(e){return Array.isArray(window.cart)?window.cart:[]}}
+  function emptyCartNow(){
+    try{ if(Array.isArray(cart)) cart.splice(0,cart.length); else cart=[]; }catch(e){try{window.cart=[];}catch(_e){}}
+    try{ if(Array.isArray(window.cart)) window.cart.splice(0,window.cart.length); }catch(e){}
+    try{ if(typeof updateCartUI==='function') updateCartUI(); }catch(e){}
+    try{ if(typeof renderCart==='function') renderCart(); }catch(e){}
+    try{ if(typeof renderProducts==='function') renderProducts(); }catch(e){}
+    try{const c=$('floatCount'); if(c)c.textContent='0'; $('floatCart')?.classList.remove('show');}catch(e){}
+  }
+  function amount(x){try{if(typeof amountText==='function'){const a=amountText(x);if(a)return a}}catch(e){} const q=Number(x&&x.qty||1),t=(x&&(x.unitType||x.unitKind))||'piece'; if(t==='kg'){if(q===.25)return'ربع كيلو';if(q===.5)return'نصف كيلو';if(q===.75)return'ثلاثة أرباع كيلو';return(Number.isInteger(q)?q:q.toLocaleString('ar-IQ'))+' كغم'} if(t==='pack')return q+' عبوة'; return q+' عدد'}
+  function validBalance(){try{ if(typeof memberBalance==='function') return Number(memberBalance())>0; }catch(e){} try{return Number(currentMember&&currentMember.balance||0)>0}catch(e){return true}}
+  function balanceBlock(){notify('رصيدك غير كافي، يرجى تعبئة الرصيد من قسم الإدارة'); try{const p=$('insufficientPop'); if(p)p.classList.add('show')}catch(e){}}
+  function buildMsg(items){
+    const n=clean($('orderName')?.value),a=clean($('orderArea')?.value),ph=clean($('orderPhone')?.value);
+    const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';
+    const branch=clean((typeof currentBranch!=='undefined'&&currentBranch&&currentBranch.name)?currentBranch.name:'سوق المدنية الكبير');
+    const lines=items.map((x,i)=>{
+      const arr=[`${i+1}. ${clean(x.name||'منتج')}`,`الكمية: ${amount(x)}`];
+      if(x.restaurantName)arr.push('المطعم المطلوب: '+clean(x.restaurantName));
+      if(x.butcher)arr.push('الكصاب المطلوب: '+clean(x.butcher));
+      if(x.brand)arr.push('الماركة/النوع: '+clean(x.brand));
+      if(x.restOption)arr.push('التفاصيل: '+clean(x.restOption));
+      if(x.restSize)arr.push('الحجم: '+clean(x.restSize));
+      if(x.pastryOption)arr.push('النوع/الحشوة: '+clean(x.pastryOption));
+      if(x.customerNote)arr.push('ملاحظة الزبون: '+clean(x.customerNote));
+      if(x.groceryNote)arr.push('ملاحظة الزبون: '+clean(x.groceryNote));
+      if(x.pastryNote)arr.push('ملاحظة الزبون: '+clean(x.pastryNote));
+      if(x.desc)arr.push('تفاصيل: '+clean(x.desc));
+      return arr.join('\n');
+    }).join('\n--------------------\n');
+    return `طلب جديد - ${branch}\n\nالاسم: ${n}\nالمنطقة: ${a}\nالهاتف: ${ph}\nنوع الطلب: ${delivery}\n\nالمنتجات:\n${lines}\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;
+  }
+  function sendFinal(ev){
+    if(ev){try{ev.preventDefault();ev.stopPropagation();}catch(e){}}
+    removeFlags();
+    const items=getCart().slice();
+    if(!items.length){notify('السلة فارغة');return false;}
+    if(!clean($('orderName')?.value)||!clean($('orderArea')?.value)||!clean($('orderPhone')?.value)){notify('أكمل الاسم والمنطقة ورقم الهاتف');return false;}
+    if(!validBalance()){balanceBlock();return false;}
+    const url='https://wa.me/'+WA_PHONE+'?text='+encodeURIComponent(buildMsg(items));
+    // هذا هو الفرق الجذري: تصفير السلة مباشرة قبل الخروج، وليس بعد الرجوع ولا بعد timeout
+    emptyCartNow();
+    closeCartSafe();
+    try{ if(typeof showScreen==='function') showScreen('homeScreen'); }catch(e){}
+    try{window.scrollTo(0,0)}catch(e){}
+    setTimeout(()=>{try{ const w=window.open(url,'_blank'); if(!w) window.location.href=url; }catch(e){window.location.href=url;}},80);
+    setTimeout(emptyCartNow,300);
+    setTimeout(emptyCartNow,1500);
+    return false;
+  }
+  function ensureWhatsappButton(){
+    const form=document.querySelector('#cartSheet .cart-form'); if(!form)return;
+    form.querySelectorAll('button,a').forEach(el=>{if(/واتساب|WhatsApp/i.test(el.textContent||'') && el.id!=='medinaWhatsappSendFinal')el.remove();});
+    let btn=$('medinaWhatsappSendFinal');
+    if(!btn){
+      const note=document.createElement('div');note.className='medina-final-wa-note';note.textContent='بعد الإرسال تُفرّغ السلة تلقائياً.';
+      btn=document.createElement('button');btn.type='button';btn.id='medinaWhatsappSendFinal';btn.textContent='إرسال الطلب عبر واتساب';
+      form.appendChild(note);form.appendChild(btn);
+    }
+    btn.disabled=false;btn.style.pointerEvents='auto';btn.onclick=sendFinal;
+  }
+  const oldRender=window.renderCart;
+  window.renderCart=function(){try{if(typeof oldRender==='function')oldRender();}catch(e){} ensureWhatsappButton();};
+  window.openCart=openCartSafe;
+  window.closeCart=closeCartSafe;
+  window.sendOrderWhatsApp=sendFinal;
+  // منع مشكلة خروج السلة عند تعديل الاسم/العنوان/الرقم: نمسح فلكات الإرسال ولا نخلي أحداث قديمة توصل للخارج
+  ['focus','focusin','input','keydown','keyup','change','click','touchstart','mousedown'].forEach(ev=>{
+    document.addEventListener(ev,function(e){
+      if(e.target&&e.target.closest&&e.target.closest('#cartSheet')){removeFlags(); e.stopPropagation();}
+    },true);
+  });
+  document.addEventListener('click',function(e){
+    const el=e.target&&e.target.closest&&e.target.closest('#medinaWhatsappSendFinal, button, a'); if(!el)return;
+    const txt=(el.textContent||'').replace(/\s+/g,' ').trim();
+    if(el.id==='medinaWhatsappSendFinal'||txt.includes('إرسال الطلب عبر واتساب'))sendFinal(e);
+  },true);
+  window.addEventListener('pageshow',function(){removeFlags();unlockOnly();emptyCartNow();},{passive:true});
+  document.addEventListener('DOMContentLoaded',function(){removeFlags();ensureWhatsappButton();});
+  setTimeout(()=>{removeFlags();ensureWhatsappButton();},500);
+})();
+</script>
+
 </body>
 </html>
 
