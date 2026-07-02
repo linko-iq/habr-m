@@ -2212,6 +2212,204 @@ button,input,select,textarea{max-width:100%;touch-action:manipulation;}
 })();
 </script>
 
+
+<!-- ===== MEDINA BAZAAR FIREBASE ONLINE SYNC PATCH ===== -->
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+<style id="medinaFirebasePatchStyle">
+.firebase-admin-box{margin-top:16px;padding:14px;border-radius:22px;background:#fff;border:1px solid var(--line,#e4e7ec);box-shadow:var(--soft,0 10px 30px rgba(16,24,40,.08))}.firebase-admin-box h2{font-size:20px;font-weight:900;margin-bottom:8px}.firebase-order{padding:12px;border:1px solid var(--line,#e4e7ec);border-radius:18px;margin:9px 0;background:#f8fafc}.firebase-order h3{font-size:15px;margin-bottom:5px}.firebase-order p{font-size:13px;line-height:1.8;color:#475467;white-space:pre-wrap}.firebase-order-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.firebase-badge{display:inline-flex;border-radius:999px;padding:3px 8px;font-weight:900;font-size:11px;background:#ecfdf3;color:#087443}.firebase-badge.done{background:#e0f2fe;color:#075985}.firebase-badge.cancel{background:#fee2e2;color:#991b1b}.firebase-sync-note{margin:10px 0;padding:10px 12px;border-radius:16px;background:#ecfdf3;border:1px solid #bbf7d0;color:#087443;font-weight:900;text-align:center;line-height:1.7}.firebase-small{font-size:12px;color:#667085;font-weight:800}.firebase-tabs{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}.firebase-tabs button{min-height:38px;border-radius:999px;padding:7px 12px;background:#fff;border:1px solid var(--line,#e4e7ec);font-weight:900}.firebase-tabs button.active{background:#111827;color:#fff;border-color:#111827}
+</style>
+<script id="medinaFirebaseOnlineSyncPatch">
+(function(){
+  const firebaseConfig = {
+    apiKey: "AIzaSyDwfXoR7jLNUvY9Ms9tw4gsPoY4T4dVWUA",
+    authDomain: "medina-bazaar.firebaseapp.com",
+    projectId: "medina-bazaar",
+    storageBucket: "medina-bazaar.firebasestorage.app",
+    messagingSenderId: "852803144600",
+    appId: "1:852803144600:web:6a76e2098c51756d5879ed"
+  };
+  let db=null, firebaseReady=false, ordersUnsub=null, membersUnsub=null, adminOnlineTab='orders';
+  try{
+    if(window.firebase && !firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    firebaseReady = true;
+    console.log('Medina Firebase connected');
+  }catch(e){ console.warn('Firebase init failed', e); }
+  window.medinaFirebaseReady = function(){ return !!firebaseReady; };
+
+  function safeToast(msg){ try{ if(typeof toast==='function') toast(msg); else alert(msg); }catch(e){ alert(msg); } }
+  function nowIso(){ return new Date().toISOString(); }
+  function moneySafe(n){ try{ return typeof money==='function'?money(n):String(n||0); }catch(e){ return String(n||0); } }
+  function amountSafe(item){ try{ return typeof amountText==='function'?amountText(item):((item.qty||1)+''); }catch(e){ return (item.qty||1)+''; } }
+  function currentBranchName(){ try{return (currentBranch && currentBranch.name) || document.getElementById('branchTitle')?.textContent || 'سوق المدينة الكبير';}catch(e){return 'سوق المدينة الكبير';} }
+  function cartSnapshot(){
+    let list=[];
+    try{ list = Array.isArray(cart) ? cart : []; }catch(e){ list=[]; }
+    return list.map(x=>({
+      id:String(x.id||''), name:String(x.name||''), category:String(x.cat||''), qty:Number(x.qty||1),
+      amountText:amountSafe(x), unitType:String(x.unitType||x.unitKind||''), brand:String(x.brand||''),
+      note:String(x.customerNote||x.restaurantNote||x.note||''), restaurant:String(x.restaurantName||''), price:Number(x.price||0), img:String(x.img||'')
+    }));
+  }
+  function buildOrderMessage(data){
+    const lines=(data.items||[]).map((x,i)=>`${i+1}. ${x.name}\nالكمية: ${x.amountText||x.qty}${x.brand?'\nالماركة/العلامة: '+x.brand:''}${x.note?'\nملاحظة: '+x.note:''}${x.restaurant?'\nالمطعم: '+x.restaurant:''}`).join('\n--------------------\n');
+    return `طلب جديد - ${data.branch||'سوق المدينة الكبير'}\n\nالاسم: ${data.customer?.name||''}\nالمنطقة: ${data.customer?.area||''}\nالهاتف: ${data.customer?.phone||''}\nنوع الطلب: ${data.deliveryType||'توصيل'}\n\nالمنتجات:\n${lines}\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;
+  }
+  async function saveOrderOnline(data){
+    if(!firebaseReady) return null;
+    const doc = await db.collection('orders').add({ ...data, status:'new', createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdAtIso: nowIso() });
+    return doc.id;
+  }
+  async function saveMemberOnline(member){
+    if(!firebaseReady) return null;
+    const q=await db.collection('members').where('code','==',member.code).limit(1).get();
+    if(!q.empty) throw new Error('weak-code');
+    const doc=await db.collection('members').add({ ...member, status:'pending', balance:Number(member.balance||0), createdAt:firebase.firestore.FieldValue.serverTimestamp(), createdAtIso:nowIso() });
+    return doc.id;
+  }
+  async function findMemberByCode(code){
+    if(firebaseReady){
+      const q=await db.collection('members').where('code','==',String(code||'').trim()).limit(1).get();
+      if(!q.empty){ const d=q.docs[0]; return {docId:d.id, ...d.data()}; }
+    }
+    try{ return (typeof getMembers==='function'?getMembers():[]).find(x=>String(x.code||'')===String(code||'').trim()) || null; }catch(e){ return null; }
+  }
+
+  const oldSubmitRegister = window.submitRegister;
+  window.submitRegister = async function(e){
+    if(e) e.preventDefault();
+    const name=(document.getElementById('regName')?.value||'').trim();
+    const area=(document.getElementById('regArea')?.value||'').trim();
+    const phone=(document.getElementById('regPhone')?.value||'').trim();
+    const code=(document.getElementById('regCode')?.value||'').trim();
+    if(!name||!area||!phone||!code){ safeToast('أكمل جميع معلومات الاشتراك'); return; }
+    const strong=/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@#$%_\-!*.]{6,24}$/.test(code);
+    if(!strong){ safeToast('الرمز غير قوي، استخدم أحرف إنكليزية وأرقام مثل: Medina2026'); return; }
+    const member={id:Date.now(),name,area,phone,code,status:'pending',balance:0};
+    try{
+      await saveMemberOnline(member);
+      try{ const members=typeof getMembers==='function'?getMembers():[]; members.unshift(member); if(typeof setMembers==='function') setMembers(members); }catch(_e){}
+      e?.target?.reset();
+      document.getElementById('successPop')?.classList.add('show');
+      setTimeout(()=>{document.getElementById('successPop')?.classList.remove('show'); if(typeof showScreen==='function') showScreen('welcomeScreen');},3500);
+    }catch(err){
+      if(String(err.message||'').includes('weak-code')) safeToast('الرمز غير قوي، يرجى استخدام رمز آخر يحتوي على أحرف إنكليزية وأرقام.');
+      else { console.warn(err); if(typeof oldSubmitRegister==='function') return oldSubmitRegister.call(this,e); safeToast('تعذر إرسال الاشتراك حالياً'); }
+    }
+  };
+
+  window.loginMember = async function(e){
+    if(e) e.preventDefault();
+    const code=(document.getElementById('loginCode')?.value||'').trim();
+    if(!code){ safeToast('اكتب الرمز السري'); return; }
+    try{
+      const m=await findMemberByCode(code);
+      if(!m){ safeToast('لا يوجد حساب بهذا الرمز، يرجى تسجيل اشتراك جديد'); return; }
+      if(m.status==='pending'){ safeToast('حسابك بانتظار موافقة الإدارة.'); return; }
+      if(m.status==='rejected'){ safeToast('تم رفض هذا الحساب من الإدارة.'); return; }
+      if(m.status==='stopped'){ safeToast('تم إيقاف الحساب من الإدارة.'); return; }
+      if(Number(m.balance||0)<=0){ safeToast('رصيدك غير كافي، يرجى تعبئة الرصيد من الإدارة'); return; }
+      window.currentMember=m;
+      const mw=document.getElementById('memberWelcome'); if(mw) mw.textContent='أهلاً، '+(m.name||'');
+      const on=document.getElementById('orderName'), oa=document.getElementById('orderArea'), op=document.getElementById('orderPhone');
+      if(on) on.value=m.name||''; if(oa) oa.value=m.area||''; if(op) op.value=m.phone||'';
+      const lc=document.getElementById('loginCode'); if(lc) lc.value='';
+      if(typeof showScreen==='function') showScreen('homeScreen');
+    }catch(err){ console.warn(err); safeToast('تعذر تسجيل الدخول حالياً'); }
+  };
+
+  const oldAddToCart = window.addToCart;
+  window.addToCart = function(id,btn){
+    try{ if(window.currentMember && Number(window.currentMember.balance||0)<=0){ safeToast('رصيدك غير كافي، يرجى تعبئة الرصيد من قسم الإدارة'); return false; } }catch(e){}
+    return typeof oldAddToCart==='function' ? oldAddToCart.call(this,id,btn) : false;
+  };
+
+  function clearCartFinal(){
+    try{ cart=[]; }catch(e){ window.cart=[]; }
+    try{ if(typeof updateCartUI==='function') updateCartUI(); }catch(e){}
+    try{ if(typeof renderCart==='function') renderCart(); }catch(e){}
+    try{ document.getElementById('cartSheet')?.classList.remove('show'); }catch(e){}
+  }
+  window.sendOrderWhatsApp = async function(ev){
+    if(ev){ try{ev.preventDefault();ev.stopPropagation();}catch(e){} }
+    let items=cartSnapshot();
+    if(!items.length){ safeToast('السلة فارغة'); return; }
+    if(window.currentMember && Number(window.currentMember.balance||0)<=0){ safeToast('رصيدك غير كافي، يرجى تعبئة الرصيد من قسم الإدارة'); return; }
+    const n=document.getElementById('orderName'), a=document.getElementById('orderArea'), ph=document.getElementById('orderPhone');
+    if(!n?.value || !a?.value || !ph?.value){ safeToast('أكمل الاسم والمنطقة ورقم الهاتف'); return; }
+    const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';
+    const total=items.reduce((s,x)=>s+(Number(x.price||0)*Number(x.qty||1)),0);
+    const order={ branch:currentBranchName(), customer:{name:n.value.trim(),area:a.value.trim(),phone:ph.value.trim()}, deliveryType:delivery, items, total, memberCode:window.currentMember?.code||'', memberName:window.currentMember?.name||'' };
+    let savedId='';
+    try{ savedId = await saveOrderOnline(order) || ''; safeToast('تم حفظ الطلب في الإدارة'); }catch(err){ console.warn('order save failed',err); safeToast('سيتم إرسال الطلب عبر واتساب، وتعذر حفظه أونلاين مؤقتاً'); }
+    const msg=buildOrderMessage({...order, firebaseId:savedId});
+    clearCartFinal();
+    try{ sessionStorage.setItem('medina_cart_sent','1'); localStorage.setItem('medina_cart_sent','1'); }catch(e){}
+    const phone='9647887624967';
+    const deep=`whatsapp://send?phone=${phone}&text=${encodeURIComponent(msg)}`;
+    const web=`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    try{ window.location.href=deep; setTimeout(()=>{ window.location.href=web; },900); }
+    catch(e){ window.open(web,'_blank'); }
+  };
+
+  function ensureAdminOnlineBox(){
+    const adminContent=document.getElementById('adminContent');
+    if(!adminContent || document.getElementById('firebaseAdminBox')) return;
+    adminContent.insertAdjacentHTML('afterbegin',`<div class="firebase-admin-box" id="firebaseAdminBox"><h2>الطلبات والاشتراكات الأونلاين</h2><div class="firebase-sync-note">متصل بقاعدة بيانات Firebase — الطلبات تظهر من كل الأجهزة.</div><div class="firebase-tabs"><button id="fbTabOrders" class="active" onclick="medinaAdminTab('orders')">طلبات الزبائن</button><button id="fbTabMembers" onclick="medinaAdminTab('members')">اشتراكات الأعضاء</button></div><div id="firebaseOrdersList"><div class="empty">جاري تحميل الطلبات...</div></div><div id="firebaseMembersList" class="hidden"><div class="empty">جاري تحميل الاشتراكات...</div></div></div>`);
+  }
+  window.medinaAdminTab=function(tab){
+    adminOnlineTab=tab;
+    document.getElementById('fbTabOrders')?.classList.toggle('active',tab==='orders');
+    document.getElementById('fbTabMembers')?.classList.toggle('active',tab==='members');
+    document.getElementById('firebaseOrdersList')?.classList.toggle('hidden',tab!=='orders');
+    document.getElementById('firebaseMembersList')?.classList.toggle('hidden',tab!=='members');
+  };
+  function fmtTime(v){ try{ return v?.toDate ? v.toDate().toLocaleString('ar-IQ') : (v?new Date(v).toLocaleString('ar-IQ'):''); }catch(e){ return ''; } }
+  function renderOnlineOrders(snap){
+    const box=document.getElementById('firebaseOrdersList'); if(!box) return;
+    if(snap.empty){ box.innerHTML='<div class="empty">لا توجد طلبات أونلاين حالياً</div>'; return; }
+    box.innerHTML=snap.docs.map(d=>{const o=d.data(); const items=(o.items||[]).map((x,i)=>`${i+1}. ${x.name} — ${x.amountText||x.qty}${x.brand?' — '+x.brand:''}${x.note?' — '+x.note:''}`).join('\n'); const cls=o.status==='done'?'done':(o.status==='cancelled'?'cancel':''); return `<div class="firebase-order"><h3>${o.branch||'طلب'} <span class="firebase-badge ${cls}">${o.status==='done'?'مكتمل':o.status==='cancelled'?'ملغي':'جديد'}</span></h3><p><b>الاسم:</b> ${o.customer?.name||''}<br><b>المنطقة:</b> ${o.customer?.area||''}<br><b>الهاتف:</b> ${o.customer?.phone||''}<br><b>الاستلام:</b> ${o.deliveryType||''}<br><b>الوقت:</b> ${fmtTime(o.createdAt)||fmtTime(o.createdAtIso)}</p><p>${items}</p><div class="firebase-order-actions"><button class="btn mini" onclick="medinaSetOrderStatus('${d.id}','done')">✅ تم التجهيز</button><button class="btn danger mini" onclick="medinaSetOrderStatus('${d.id}','cancelled')">إلغاء</button><button class="btn dark mini" onclick="medinaDeleteOrder('${d.id}')">حذف</button></div></div>`}).join('');
+  }
+  function renderOnlineMembers(snap){
+    const box=document.getElementById('firebaseMembersList'); if(!box) return;
+    if(snap.empty){ box.innerHTML='<div class="empty">لا توجد اشتراكات أونلاين حالياً</div>'; return; }
+    box.innerHTML=snap.docs.map(d=>{const m=d.data(); return `<div class="request" data-status="${m.status||'pending'}"><div><h3>${m.name||''}</h3><p>المنطقة: ${m.area||''}<br>الهاتف: ${m.phone||''}<br>الرمز السري: ${m.code||''}<br>الرصيد: ${Number(m.balance||0).toLocaleString('ar-IQ')} د.ع</p><span class="status ${m.status||'pending'}">${m.status==='approved'?'مفعل':m.status==='rejected'?'مرفوض':m.status==='stopped'?'متوقف':'بانتظار الموافقة'}</span></div><div class="req-actions"><button class="btn mini" onclick="medinaSetMemberStatus('${d.id}','approved')">✅ موافقة</button><button class="btn danger mini" onclick="medinaSetMemberStatus('${d.id}','rejected')">❌ رفض</button><button class="btn dark mini" onclick="medinaSetMemberStatus('${d.id}','stopped')">🛑 إيقاف</button><button class="btn secondary mini" onclick="medinaSetMemberBalance('${d.id}', ${Number(m.balance||0)})">💰 رصيد</button></div></div>`}).join('');
+  }
+  function startAdminRealtime(){
+    if(!firebaseReady) return;
+    ensureAdminOnlineBox();
+    if(!ordersUnsub){ ordersUnsub=db.collection('orders').orderBy('createdAt','desc').limit(80).onSnapshot(renderOnlineOrders,err=>{console.warn(err);}); }
+    if(!membersUnsub){ membersUnsub=db.collection('members').orderBy('createdAt','desc').limit(120).onSnapshot(renderOnlineMembers,err=>{console.warn(err);}); }
+  }
+  window.medinaSetOrderStatus=async function(id,status){ try{ await db.collection('orders').doc(id).update({status,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}); }catch(e){safeToast('تعذر تحديث الطلب');} };
+  window.medinaDeleteOrder=async function(id){ if(!confirm('حذف الطلب؟')) return; try{ await db.collection('orders').doc(id).delete(); }catch(e){safeToast('تعذر حذف الطلب');} };
+  window.medinaSetMemberStatus=async function(id,status){ try{ await db.collection('members').doc(id).update({status,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}); }catch(e){safeToast('تعذر تحديث العضوية');} };
+  window.medinaSetMemberBalance=async function(id,current){ const v=prompt('اكتب الرصيد الجديد بالدينار العراقي', String(current||0)); if(v===null) return; const n=Number(String(v).replace(/[^0-9.]/g,'')); if(!Number.isFinite(n)){safeToast('رصيد غير صحيح');return;} try{ await db.collection('members').doc(id).update({balance:n,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}); }catch(e){safeToast('تعذر تحديث الرصيد');} };
+
+  const oldAdminLogin=window.adminLogin;
+  window.adminLogin=function(){
+    const pass=document.getElementById('adminPass')?.value||'';
+    if(pass==='Hussein$15'){
+      document.getElementById('adminLogin')?.classList.add('hidden');
+      document.getElementById('adminContent')?.classList.remove('hidden');
+      try{ if(typeof renderRequests==='function') renderRequests(); }catch(e){}
+      startAdminRealtime();
+    }else if(typeof oldAdminLogin==='function') oldAdminLogin(); else safeToast('رمز الإدارة غير صحيح');
+  };
+  const oldShowScreen=window.showScreen;
+  window.showScreen=function(id){
+    if(typeof oldShowScreen==='function') oldShowScreen(id);
+    if(id==='adminScreen'){ setTimeout(()=>{ if(!document.getElementById('adminContent')?.classList.contains('hidden')) startAdminRealtime(); },120); }
+  };
+  document.addEventListener('click',function(e){
+    const btn=e.target.closest&&e.target.closest('button'); if(!btn) return;
+    const txt=(btn.textContent||'').replace(/\s+/g,' ').trim();
+    if(txt.includes('إرسال الطلب عبر واتساب')){ e.preventDefault(); e.stopPropagation(); window.sendOrderWhatsApp(e); }
+  },true);
+})();
+</script>
+
 </body>
 </html>
 
