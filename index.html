@@ -3501,3 +3501,158 @@ body.linko-restaurant-unified .cats{display:none!important;visibility:hidden!imp
 
 
 
+
+
+<!-- ===== MEDINA ABSOLUTE FINAL: BALANCE GATE + CART CLEAR AFTER WHATSAPP ===== -->
+<script id="medinaAbsoluteFinalBalanceCartFix">
+(function(){
+  'use strict';
+  const MEDINA_WA_PHONE = '9647887624967';
+  const SENT_FLAG = 'medina_final_order_sent_clear_v3';
+  function byId(id){ return document.getElementById(id); }
+  function cleanText(v){ return String(v == null ? '' : v).trim(); }
+  function notify(msg){ try{ if(typeof toast === 'function') toast(msg); else alert(msg); }catch(e){ alert(msg); } }
+  function safeMoney(n){ try{ if(typeof money === 'function') return money(Number(n)||0); }catch(e){} return (Number(n)||0).toLocaleString('ar-IQ') + ' د.ع'; }
+  function safeAmount(item){ try{ if(typeof amountText === 'function') return amountText(item); }catch(e){} const q=Number(item && item.qty || 1); return Number.isInteger(q) ? String(q) : q.toLocaleString('ar-IQ'); }
+  function getFreshMember(){
+    try{
+      if(!currentMember) return null;
+      const list = (typeof getMembers === 'function') ? getMembers() : JSON.parse(localStorage.getItem('hm_members')||'[]');
+      const m = (list||[]).find(x => String(x.id)===String(currentMember.id) || String(x.code||'')===String(currentMember.code||''));
+      if(m){ currentMember = m; return m; }
+      return currentMember;
+    }catch(e){ return (typeof currentMember !== 'undefined') ? currentMember : null; }
+  }
+  function getBalance(){
+    try{ if(typeof memberBalance === 'function') return Number(memberBalance()) || 0; }catch(e){}
+    const m = getFreshMember();
+    return Number(m && m.balance || 0) || 0;
+  }
+  function showBalanceBlocked(){
+    const pop = byId('insufficientPop');
+    if(pop){
+      const p = pop.querySelector('p');
+      if(p) p.textContent = 'رصيدك غير كافي، يرجى تعبئة الرصيد من قسم الإدارة حتى تتمكن من إضافة المنتجات وإرسال الطلب.';
+      pop.classList.add('show');
+    }
+    notify('رصيدك غير كافي، يرجى تعبئة الرصيد من قسم الإدارة');
+  }
+  function hasValidBalance(){ return getBalance() > 0; }
+  function closeCartHard(){
+    try{ byId('cartSheet')?.classList.remove('show','linko-clean-cart'); }catch(e){}
+    try{ const cs=byId('cartSheet'); if(cs){ cs.style.display='none'; cs.style.pointerEvents='none'; } }catch(e){}
+    try{ document.body.classList.remove('cart-page-open','linko-clean-cart-open','force-scroll-unlock'); document.documentElement.classList.remove('cart-page-open-html','linko-clean-cart-open'); }catch(e){}
+    try{ document.body.style.position=''; document.body.style.overflow=''; document.body.style.overflowY=''; document.body.style.height=''; document.documentElement.style.position=''; document.documentElement.style.overflowY=''; document.documentElement.style.height=''; }catch(e){}
+  }
+  function clearCartAbsolutely(){
+    try{
+      if(Array.isArray(cart)) cart.splice(0, cart.length);
+      else cart = [];
+    }catch(e){ try{ cart = []; }catch(_e){} }
+    try{ if(typeof updateCartUI === 'function') updateCartUI(); }catch(e){}
+    try{ if(typeof renderCart === 'function') renderCart(); }catch(e){}
+    try{ if(typeof renderProducts === 'function') renderProducts(); }catch(e){}
+    try{ const c=byId('floatCount'); if(c) c.textContent='0'; }catch(e){}
+    try{ byId('floatCart')?.classList.remove('show'); }catch(e){}
+    try{ const total=byId('cartTotal'); if(total) total.textContent=''; }catch(e){}
+  }
+  function itemLines(items){
+    return items.map((x,i)=>{
+      const parts = [String(i+1)+'. '+(x.name||'منتج'), 'الكمية: '+safeAmount(x)];
+      if(x.restaurantName) parts.push('المطعم المطلوب: '+x.restaurantName);
+      if(x.butcher) parts.push('الكصاب المطلوب: '+x.butcher);
+      if(x.brand) parts.push('الماركة/النوع: '+x.brand);
+      if(x.restOption) parts.push('التفاصيل: '+x.restOption);
+      if(x.restSize) parts.push('الحجم: '+x.restSize);
+      if(x.pastryOption) parts.push('النوع/الحشوة: '+x.pastryOption);
+      if(x.customerNote) parts.push('ملاحظة الزبون: '+x.customerNote);
+      if(x.groceryNote) parts.push('ملاحظة الزبون: '+x.groceryNote);
+      if(x.pastryNote) parts.push('ملاحظة الزبون: '+x.pastryNote);
+      if(x.desc) parts.push('تفاصيل: '+x.desc);
+      return parts.join('\n');
+    }).join('\n--------------------\n');
+  }
+  function buildWhatsappMessage(items){
+    const delivery = document.querySelector('input[name="deliveryType"]:checked')?.value || 'توصيل';
+    const branch = (typeof currentBranch !== 'undefined' && currentBranch && currentBranch.name) ? currentBranch.name : 'سوق المدنية الكبير';
+    const butcher = cleanText(byId('butcherName')?.value || items.find(x=>x.butcher)?.butcher || '');
+    const restaurant = cleanText(items.find(x=>x.restaurantName)?.restaurantName || byId('restaurantNameRequired')?.value || byId('restaurantName')?.value || '');
+    return `طلب جديد - ${branch}\n\nالاسم: ${cleanText(byId('orderName')?.value)}\nالمنطقة: ${cleanText(byId('orderArea')?.value)}\nالهاتف: ${cleanText(byId('orderPhone')?.value)}\nنوع الطلب: ${delivery}${butcher?'\nالكصاب المطلوب: '+butcher:''}${restaurant?'\nالمطعم المطلوب: '+restaurant:''}\n\nالمنتجات:\n${itemLines(items)}\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;
+  }
+  function finalSendOrderWhatsApp(ev){
+    if(ev && typeof ev.preventDefault === 'function') ev.preventDefault();
+    let items = [];
+    try{ items = Array.isArray(cart) ? cart.slice() : []; }catch(e){ items = []; }
+    if(!items.length){ notify('السلة فارغة'); return false; }
+    if(!cleanText(byId('orderName')?.value) || !cleanText(byId('orderArea')?.value) || !cleanText(byId('orderPhone')?.value)){
+      notify('أكمل الاسم والمنطقة ورقم الهاتف'); return false;
+    }
+    if(!hasValidBalance()){
+      showBalanceBlocked(); return false;
+    }
+    const url = 'https://wa.me/' + MEDINA_WA_PHONE + '?text=' + encodeURIComponent(buildWhatsappMessage(items));
+    try{ sessionStorage.setItem(SENT_FLAG,'1'); localStorage.setItem(SENT_FLAG, String(Date.now())); }catch(e){}
+    /* مهم جداً: نمسح السلة قبل الخروج للواتساب، حتى إذا رجع الزبون تكون فارغة */
+    clearCartAbsolutely();
+    closeCartHard();
+    try{ if(typeof showScreen === 'function') showScreen('homeScreen'); }catch(e){}
+    try{ window.scrollTo(0,0); }catch(e){}
+    try{
+      const w = window.open(url, '_blank');
+      if(!w) window.location.href = url;
+    }catch(e){ window.location.href = url; }
+    setTimeout(clearCartAbsolutely, 250);
+    setTimeout(clearCartAbsolutely, 1200);
+    return false;
+  }
+
+  const previousAddToCart = window.addToCart;
+  window.addToCart = function(id, btn){
+    if(!hasValidBalance()){
+      showBalanceBlocked();
+      try{ if(btn){ btn.classList.remove('added','bump'); btn.textContent='إضافة للسلة'; } }catch(e){}
+      return false;
+    }
+    return (typeof previousAddToCart === 'function') ? previousAddToCart.call(this, id, btn) : false;
+  };
+
+  window.sendOrderWhatsApp = finalSendOrderWhatsApp;
+  window.medinaFinalClearCartAfterOrder = clearCartAbsolutely;
+
+  function bindWhatsButtons(){
+    document.querySelectorAll('button').forEach(btn=>{
+      const txt = (btn.textContent || '').replace(/\s+/g,' ').trim();
+      const attr = String(btn.getAttribute('onclick')||'');
+      if(txt.includes('إرسال الطلب عبر واتساب') || attr.includes('sendOrderWhatsApp')){
+        btn.type = 'button';
+        btn.onclick = finalSendOrderWhatsApp;
+        btn.style.pointerEvents = 'auto';
+        btn.disabled = false;
+      }
+    });
+  }
+  function clearOnReturn(){
+    let sent = false;
+    try{ sent = sessionStorage.getItem(SENT_FLAG)==='1' || !!localStorage.getItem(SENT_FLAG); }catch(e){}
+    if(sent){
+      clearCartAbsolutely();
+      closeCartHard();
+      try{ sessionStorage.removeItem(SENT_FLAG); localStorage.removeItem(SENT_FLAG); }catch(e){}
+    }
+  }
+  document.addEventListener('click', function(e){
+    const btn = e.target.closest && e.target.closest('button');
+    if(!btn) return;
+    const txt = (btn.textContent || '').replace(/\s+/g,' ').trim();
+    if(txt.includes('إرسال الطلب عبر واتساب')){
+      e.preventDefault(); e.stopPropagation(); finalSendOrderWhatsApp(e);
+    }
+  }, true);
+  document.addEventListener('DOMContentLoaded', bindWhatsButtons);
+  setTimeout(bindWhatsButtons, 300);
+  setTimeout(bindWhatsButtons, 1200);
+  window.addEventListener('pageshow', clearOnReturn, {passive:true});
+  window.addEventListener('focus', clearOnReturn, {passive:true});
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') clearOnReturn(); }, {passive:true});
+})();
+</script>
