@@ -162,7 +162,7 @@ body.loading-lock{overflow:hidden}
       <div id="adminLogin" class="admin-login">
         <div class="field"><label>رمز دخول الإدارة</label><input id="adminPass" type="password" placeholder="رمز الإدارة"></div>
         <button class="btn dark full" onclick="adminLogin()">دخول الإدارة</button>
-        <small style="color:var(--muted);font-weight:800;text-align:center">رمز الإدارة محمي وغير ظاهر داخل الواجهة</small>
+        
       </div>
       <div id="adminContent" class="hidden">
         <div class="section-title"><div><h2>طلبات الاشتراك</h2><small>موافقة، رفض، أو إيقاف الحساب</small></div><button class="btn secondary mini" onclick="seedRequests()">إضافة بيانات عرض</button></div>
@@ -176,7 +176,7 @@ body.loading-lock{overflow:hidden}
 <div class="toast" id="toast"></div>
 
 <script>
-const WA='9647747248826', ADMIN_CODE=String.fromCharCode(72,117,115,115,101,105,110,36,49,53);
+const WA='9647887624967', ADMIN_CODE='__linko_admin__';
 let currentMember=null,currentBranch=null,activeCat='المواد الغذائية',cart=[];
 const branches=[
  {name:'فرع المنصور',img:'https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=800&q=80'},
@@ -624,7 +624,7 @@ body.force-scroll-unlock{
     const total=money(cart.reduce((s,x)=>s+x.price*x.qty,0));
     const title=(window.currentBranch&&currentBranch.name)?currentBranch.name:'هايبر ماركت النخبة';
     const msg=`طلب جديد - ${title}\n\nالاسم: ${n.value}\nالمنطقة: ${a.value}\nالهاتف: ${p.value}\nنوع الطلب: ${delivery}\n\nالمنتجات:\n${lines}\n\nالإجمالي: ${total}\n\nتم إرسال الطلب من نظام هايبر ماركت النخبة`;
-    const phone=(typeof WA!=='undefined'&&WA)?WA:'9647747248826';
+    const phone=(typeof WA!=='undefined'&&WA)?WA:'9647887624967';
     const url=`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
     // نغلق صفحة السلة ونفك السكرول قبل الخروج للواتساب حتى لا يتجمّد المتصفح عند الرجوع
     hardUnlockScroll();
@@ -1034,7 +1034,7 @@ button,input,select{touch-action:manipulation;}
   window.addToCart=function(id,btn){const p=products.find(x=>x.id===id);if(!p)return;const amount=Math.max(0,Number(getSelectedAmount(id)||1));if(!amount){toast('اكتب كمية صحيحة');return}const type=unitTypeForProduct(p);let item=cart.find(x=>x.id===id);if(item)item.qty=Number((Number(item.qty||0)+amount).toFixed(2));else cart.push({...p,qty:amount,unitType:type,price:0});if(btn){btn.classList.add('added','bump');btn.textContent='تمت الإضافة ✓';setTimeout(()=>btn.classList.remove('bump'),300)}updateCartUI()};
   window.renderCart=function(){if(!cartList)return;cartList.innerHTML=cart.length?cart.map(x=>`<div class="cart-item"><img src="${x.img}"><div><h4>${x.name}</h4><small>${amountText(x)}${x.restaurantId?' • '+(restaurants.find(r=>r.id===x.restaurantId)?.name||'مطعم'):''}</small></div><div class="qty"><button onclick="changeQty(${x.id},1)">+</button><b>${amountText(x)}</b><button onclick="changeQty(${x.id},-1)">−</button></div></div>`).join(''):'<div class="empty">السلة فارغة حالياً</div>'};
   window.changeQty=function(id,d){const it=cart.find(x=>x.id===id);if(!it)return;const step=unitStep(it.unitType||unitTypeForProduct(it));it.qty=Number((Number(it.qty||0)+d*step).toFixed(2));if(it.qty<=0)cart=cart.filter(x=>x!==it);updateCartUI();renderProducts()};
-  window.sendOrderWhatsApp=function(){if(!cart.length){toast('السلة فارغة');return}const n=document.getElementById('orderName'),a=document.getElementById('orderArea'),p=document.getElementById('orderPhone');if(!n?.value||!a?.value||!p?.value){toast('أكمل الاسم والمنطقة ورقم الهاتف');return}const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';const lines=cart.map((x,i)=>`${i+1}. ${x.name}\nالكمية: ${amountText(x)}${x.restaurantId?'\nالمطعم: '+(restaurants.find(r=>r.id===x.restaurantId)?.name||''):''}`).join('\n--------------------\n');const title=currentBranch?.name||'هايبر ماركت النخبة';const msg=`طلب جديد - ${title}\n\nالاسم: ${n.value}\nالمنطقة: ${a.value}\nالهاتف: ${p.value}\nنوع الطلب: ${delivery}\n\nالمنتجات:\n${lines}\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;const url=`https://wa.me/${WA||'9647747248826'}?text=${encodeURIComponent(msg)}`;try{cartSheet.classList.remove('show');document.body.classList.remove('cart-page-open');document.documentElement.classList.remove('cart-page-open-html')}catch(e){}cart=[];updateCartUI();renderCart();showScreen('homeScreen');setTimeout(()=>{try{window.open(url,'_blank')}catch(e){location.href=url}},120)};
+  window.sendOrderWhatsApp=function(){if(!cart.length){toast('السلة فارغة');return}const n=document.getElementById('orderName'),a=document.getElementById('orderArea'),p=document.getElementById('orderPhone');if(!n?.value||!a?.value||!p?.value){toast('أكمل الاسم والمنطقة ورقم الهاتف');return}const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';const lines=cart.map((x,i)=>`${i+1}. ${x.name}\nالكمية: ${amountText(x)}${x.restaurantId?'\nالمطعم: '+(restaurants.find(r=>r.id===x.restaurantId)?.name||''):''}`).join('\n--------------------\n');const title=currentBranch?.name||'هايبر ماركت النخبة';const msg=`طلب جديد - ${title}\n\nالاسم: ${n.value}\nالمنطقة: ${a.value}\nالهاتف: ${p.value}\nنوع الطلب: ${delivery}\n\nالمنتجات:\n${lines}\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;const url=`https://wa.me/${WA||'9647887624967'}?text=${encodeURIComponent(msg)}`;try{cartSheet.classList.remove('show');document.body.classList.remove('cart-page-open');document.documentElement.classList.remove('cart-page-open-html')}catch(e){}cart=[];updateCartUI();renderCart();showScreen('homeScreen');setTimeout(()=>{try{window.open(url,'_blank')}catch(e){location.href=url}},120)};
   const ps=document.getElementById('productSearch');if(ps)ps.oninput=()=>renderProducts();
   renderBranches();
 })();
@@ -1565,7 +1565,7 @@ body.linko-grocery-all .cats{display:none!important;visibility:hidden!important;
   window.addToCart=function(id,btn){const p=products.find(x=>String(x.id)===String(id));if(p&&GROCERY_GROUPS.includes(p.cat)){const amount=Math.max(0,Number(getSelectedAmount2(id)||1));if(!amount){if(typeof toast==='function')toast('اكتب كمية صحيحة');return}const brand=document.getElementById('brand_'+id)?.value||'';const note=document.getElementById('note_'+id)?.value||'';const t=unitType(p);let item=cart.find(x=>String(x.id)===String(id)&&String(x.brand||'')===brand&&String(x.customerNote||'')===note);if(item)item.qty=Number((Number(item.qty||0)+amount).toFixed(2));else cart.push({...p,qty:amount,unitType:t,price:0,brand,customerNote:note});if(btn){btn.classList.add('added','bump');btn.textContent='تمت الإضافة ✓';setTimeout(()=>btn.classList.remove('bump'),300)}if(typeof updateCartUI==='function')updateCartUI();return} if(prevAdd)prevAdd(id,btn)};
   const prevAmount=window.amountText;window.amountText=function(item){if(item&&GROCERY_GROUPS.includes(item.cat))return amountText2(item);return prevAmount?prevAmount(item):amountText2(item)};
   const prevSend=window.sendOrderWhatsApp;
-  window.sendOrderWhatsApp=function(){if(typeOfBranchReal(currentBranch)!=='grocery'){if(prevSend)return prevSend();}if(!cart.length){toast('السلة فارغة');return}const n=document.getElementById('orderName'),a=document.getElementById('orderArea'),ph=document.getElementById('orderPhone');if(!n?.value||!a?.value||!ph?.value){toast('أكمل الاسم والمنطقة ورقم الهاتف');return}const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';const lines=cart.map((x,i)=>`${i+1}. ${x.name}\nالكمية: ${amountText2(x)}${x.brand?'\nالماركة/العلامة: '+x.brand:''}${x.customerNote?'\nطلب الزبون: '+x.customerNote:''}${x.desc?'\nملاحظة المنتج: '+x.desc:''}`).join('\n--------------------\n');const msg=`طلب جديد - ${currentBranch?.name||'فرع الغذائية'}\n\nالاسم: ${n.value}\nالمنطقة: ${a.value}\nالهاتف: ${ph.value}\nنوع الطلب: ${delivery}\n\nالمنتجات:\n${lines}\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;try{cartSheet.classList.remove('show');document.body.classList.remove('cart-page-open');document.documentElement.classList.remove('cart-page-open-html')}catch(e){}cart=[];if(typeof updateCartUI==='function')updateCartUI();if(typeof renderCart==='function')renderCart();if(typeof showScreen==='function')showScreen('homeScreen');setTimeout(()=>{window.open(`https://wa.me/${WA||'9647747248826'}?text=${encodeURIComponent(msg)}`,'_blank')},120)};
+  window.sendOrderWhatsApp=function(){if(typeOfBranchReal(currentBranch)!=='grocery'){if(prevSend)return prevSend();}if(!cart.length){toast('السلة فارغة');return}const n=document.getElementById('orderName'),a=document.getElementById('orderArea'),ph=document.getElementById('orderPhone');if(!n?.value||!a?.value||!ph?.value){toast('أكمل الاسم والمنطقة ورقم الهاتف');return}const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';const lines=cart.map((x,i)=>`${i+1}. ${x.name}\nالكمية: ${amountText2(x)}${x.brand?'\nالماركة/العلامة: '+x.brand:''}${x.customerNote?'\nطلب الزبون: '+x.customerNote:''}${x.desc?'\nملاحظة المنتج: '+x.desc:''}`).join('\n--------------------\n');const msg=`طلب جديد - ${currentBranch?.name||'فرع الغذائية'}\n\nالاسم: ${n.value}\nالمنطقة: ${a.value}\nالهاتف: ${ph.value}\nنوع الطلب: ${delivery}\n\nالمنتجات:\n${lines}\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;try{cartSheet.classList.remove('show');document.body.classList.remove('cart-page-open');document.documentElement.classList.remove('cart-page-open-html')}catch(e){}cart=[];if(typeof updateCartUI==='function')updateCartUI();if(typeof renderCart==='function')renderCart();if(typeof showScreen==='function')showScreen('homeScreen');setTimeout(()=>{window.open(`https://wa.me/${WA||'9647887624967'}?text=${encodeURIComponent(msg)}`,'_blank')},120)};
   const ps=document.getElementById('productSearch');if(ps)ps.oninput=()=>renderProducts();
   setInterval(setBody,600);
 })();
@@ -1698,9 +1698,161 @@ body.linko-grocery-all .cats{display:none!important;visibility:hidden!important;
     const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';
     const lines=cart.map((x,i)=>`${i+1}. ${x.name}\nالكمية: ${amountText(x)}${x.brand?'\nالماركة/العلامة: '+x.brand:''}${x.customerNote?'\nطلب الزبون: '+x.customerNote:''}${x.restaurantId?'\nالمطعم: '+String(x.cat||'').replace(/^وجبات |^مشروبات /,''):''}${x.desc?'\nملاحظة المنتج: '+x.desc:''}`).join('\n--------------------\n');
     const msg=`طلب جديد - ${currentBranch?.name||'هايبر ماركت النخبة'}\n\nالاسم: ${n.value}\nالمنطقة: ${a.value}\nالهاتف: ${ph.value}\nنوع الطلب: ${delivery}\n\nالمنتجات:\n${lines}\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;
-    try{cartSheet.classList.remove('show');document.body.classList.remove('cart-page-open');document.documentElement.classList.remove('cart-page-open-html')}catch(e){}cart=[];if(typeof updateCartUI==='function')updateCartUI();if(typeof renderCart==='function')renderCart();if(typeof showScreen==='function')showScreen('homeScreen');setTimeout(()=>{window.open(`https://wa.me/${WA||'9647747248826'}?text=${encodeURIComponent(msg)}`,'_blank')},120)
+    try{cartSheet.classList.remove('show');document.body.classList.remove('cart-page-open');document.documentElement.classList.remove('cart-page-open-html')}catch(e){}cart=[];if(typeof updateCartUI==='function')updateCartUI();if(typeof renderCart==='function')renderCart();if(typeof showScreen==='function')showScreen('homeScreen');setTimeout(()=>{window.open(`https://wa.me/${WA||'9647887624967'}?text=${encodeURIComponent(msg)}`,'_blank')},120)
   };
   const ps=document.getElementById('productSearch');if(ps)ps.oninput=()=>renderProducts();
+})();
+</script>
+
+
+
+<!-- ===== LINKO FINAL CLIENT REQUEST PATCH: ADMIN + WHATSAPP + CART SAFE ===== -->
+<style id="linkoFinalClientRequestPatchStyle">
+  #adminLogin small{display:none!important}
+  .linko-admin-note-clean{display:none!important}
+  .linko-admin-code-line{color:#475467;font-weight:900;line-height:1.8;margin-top:4px}
+  .linko-admin-code-line b{color:#111827;background:#f8fafc;border:1px solid var(--line,#e4e7ec);padding:3px 8px;border-radius:10px;display:inline-block;margin-top:3px;direction:ltr}
+  #cartSheet .btn[onclick*="sendOrderWhatsApp"]{pointer-events:auto!important;opacity:1!important;filter:none!important;position:relative!important;z-index:50!important}
+</style>
+<script id="linkoFinalClientRequestPatchScript">
+(function(){
+  'use strict';
+  const LINKO_WA_PHONE = '9647887624967';
+  const ADMIN_PARTS = ['Hus','sein','$',String(10+5)];
+  const ADMIN_SECRET = function(){ return ADMIN_PARTS.join(''); };
+  function byId(id){ return document.getElementById(id); }
+  function cleanText(v){ return String(v == null ? '' : v).replace(/[<>]/g,'').trim(); }
+  function safeMoney(n){ try{ if(typeof money==='function') return money(n||0); }catch(e){} return String(n||0)+' د.ع'; }
+  function fallbackAmount(x){
+    try{ if(typeof amountText==='function') return amountText(x); }catch(e){}
+    return (x && x.qty ? x.qty : 1) + ' عدد';
+  }
+  function currentBranchType(){
+    try{
+      const b=window.currentBranch||{}; const n=String(b.name||'');
+      if(b.type) return b.type;
+      if(n.includes('المطاعم')) return 'restaurants';
+      if(n.includes('الغذائية')) return 'grocery';
+      if(n.includes('اللحوم')) return 'meat';
+      if(n.includes('المعجنات')) return 'pastry';
+      if(n.includes('المخضر')||n.includes('الفواكه')) return 'produce';
+      if(n.includes('المطبخ')||n.includes('الأجهزة')||n.includes('اجهزه')) return 'kitchen';
+    }catch(e){}
+    return 'general';
+  }
+  function unlockEverything(){
+    try{
+      document.body.classList.remove('cart-page-open','force-scroll-unlock');
+      document.documentElement.classList.remove('cart-page-open-html');
+      document.body.style.position='static'; document.body.style.overflowY='auto'; document.body.style.height='auto';
+      document.documentElement.style.position='static'; document.documentElement.style.overflowY='auto'; document.documentElement.style.height='auto';
+    }catch(e){}
+  }
+  function closeCartOnly(){
+    try{ const cs=byId('cartSheet'); if(cs){ cs.classList.remove('show'); cs.style.display='none'; cs.style.pointerEvents='none'; } }catch(e){}
+    unlockEverything();
+  }
+  function openCartSafe(){
+    const cs=byId('cartSheet'); const sheet=cs && cs.querySelector('.sheet');
+    if(!cs || !sheet) return;
+    try{ if(typeof renderCart==='function') renderCart(); }catch(e){}
+    cs.style.display='block'; cs.style.pointerEvents='auto'; cs.classList.add('show');
+    document.body.classList.add('cart-page-open'); document.documentElement.classList.add('cart-page-open-html');
+    requestAnimationFrame(function(){ try{ sheet.scrollTop=0; }catch(e){} });
+  }
+  window.openCart = openCartSafe;
+  window.closeCart = closeCartOnly;
+
+  window.adminLogin = function(){
+    const pass = byId('adminPass');
+    if(pass && pass.value === ADMIN_SECRET()){
+      const loginBox=byId('adminLogin'), content=byId('adminContent');
+      if(loginBox) loginBox.classList.add('hidden');
+      if(content) content.classList.remove('hidden');
+      try{ if(typeof renderRequests==='function') renderRequests(); }catch(e){}
+    }else{
+      try{ toast('رمز الإدارة غير صحيح'); }catch(e){ alert('رمز الإدارة غير صحيح'); }
+    }
+  };
+
+  window.renderRequests = function(){
+    const box=byId('requestsList'); if(!box) return;
+    let list=[]; try{ list = typeof getMembers==='function' ? getMembers() : JSON.parse(localStorage.getItem('hm_members')||'[]'); }catch(e){ list=[]; }
+    const q=(window.adminQuery||byId('adminSearch')?.value||'').toString().trim().toLowerCase();
+    if(q){ list=list.filter(m=>[m.name,m.area,m.phone,m.code,m.status].join(' ').toLowerCase().includes(q)); }
+    try{
+      const all = typeof getMembers==='function' ? getMembers() : list;
+      if(byId('stAll')) byId('stAll').textContent=all.length;
+      if(byId('stPending')) byId('stPending').textContent=all.filter(x=>x.status==='pending').length;
+      if(byId('stApproved')) byId('stApproved').textContent=all.filter(x=>x.status==='approved').length;
+      if(byId('stBlocked')) byId('stBlocked').textContent=all.filter(x=>x.status==='rejected'||x.status==='stopped').length;
+    }catch(e){}
+    function st(s){ try{ if(typeof statusText==='function') return statusText(s); }catch(e){} return s==='approved'?'مفعل':s==='rejected'?'مرفوض':s==='stopped'?'متوقف':'بانتظار الموافقة'; }
+    box.innerHTML = list.length ? list.map(function(m){
+      const id=String(m.id||'').replace(/[^0-9]/g,'') || JSON.stringify(m.id);
+      return `<div class="request" data-status="${cleanText(m.status||'pending')}"><div><h3>${cleanText(m.name)}</h3><p>المنطقة: ${cleanText(m.area)}<br>الهاتف: ${cleanText(m.phone)}</p><div class="linko-admin-code-line">رمز المشترك:<br><b>${cleanText(m.code)}</b></div><span class="status ${cleanText(m.status||'pending')}">${st(m.status)}</span></div><div class="req-actions"><button class="btn mini" type="button" onclick="setStatus(${id},'approved')">✅ موافقة</button><button class="btn danger mini" type="button" onclick="setStatus(${id},'rejected')">❌ رفض</button><button class="btn dark mini" type="button" onclick="setStatus(${id},'stopped')">🛑 إيقاف</button></div></div>`;
+    }).join('') : '<div class="empty">لا توجد طلبات اشتراك حالياً</div>';
+  };
+
+  window.sendOrderWhatsApp = function(){
+    try{
+      if(!Array.isArray(window.cart) || !cart.length){ toast('السلة فارغة'); return; }
+      const n=byId('orderName'), a=byId('orderArea'), ph=byId('orderPhone');
+      if(!cleanText(n&&n.value) || !cleanText(a&&a.value) || !cleanText(ph&&ph.value)){ toast('أكمل الاسم والمنطقة ورقم الهاتف'); return; }
+      const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value || 'توصيل';
+      const type=currentBranchType();
+      let extraHeader='';
+      if(type==='restaurants'){
+        const restName = cleanText(cart.find(x=>x.restaurantName)?.restaurantName || byId('restaurantName')?.value || byId('restName')?.value || '');
+        if(!restName){ toast('اكتب اسم المطعم المطلوب'); return; }
+        extraHeader += '\nالمطعم المطلوب: '+restName+'\nتنبيه: الأفضل الطلب من مطعم واحد حتى لا يتأخر تجهيز ووصول الطلب.';
+      }
+      const butcher = cleanText(byId('butcherName')?.value || cart.find(x=>x.butcher)?.butcher || '');
+      if(butcher) extraHeader += '\nالكصاب المطلوب: '+butcher;
+      const lines=cart.map(function(x,i){
+        let s=(i+1)+'. '+cleanText(x.name)+'\nالكمية: '+fallbackAmount(x);
+        if(x.restaurantName) s+='\nالمطعم المطلوب: '+cleanText(x.restaurantName);
+        if(x.restOption) s+='\nالتفاصيل: '+cleanText(x.restOption);
+        if(x.pastryOption) s+='\nالنوع/الحشوة: '+cleanText(x.pastryOption);
+        if(x.brand) s+='\nالماركة/النوع: '+cleanText(x.brand);
+        if(x.customerNote) s+='\nملاحظة الزبون: '+cleanText(x.customerNote);
+        if(x.groceryNote) s+='\nملاحظة الزبون: '+cleanText(x.groceryNote);
+        if(x.pastryNote) s+='\nملاحظة الزبون: '+cleanText(x.pastryNote);
+        if(x.desc) s+='\nتفاصيل: '+cleanText(x.desc);
+        if(Number(x.price)>0) s+='\nالسعر التقريبي: '+safeMoney(Number(x.price)*(Number(x.qty)||1));
+        return s;
+      }).join('\n--------------------\n');
+      const total = cart.reduce((sum,x)=>sum+(Number(x.price)||0)*(Number(x.qty)||1),0);
+      const title = cleanText((window.currentBranch&&currentBranch.name) || 'هايبر ماركت النخبة');
+      const msg = `طلب جديد - ${title}\n\nالاسم: ${cleanText(n.value)}\nالمنطقة: ${cleanText(a.value)}\nالهاتف: ${cleanText(ph.value)}\nنوع الطلب: ${cleanText(delivery)}${extraHeader}\n\nالمنتجات:\n${lines}${total>0?'\n\nالإجمالي: '+safeMoney(total):'\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.'}`;
+      const url='https://wa.me/'+LINKO_WA_PHONE+'?text='+encodeURIComponent(msg);
+      closeCartOnly();
+      try{ cart.length=0; }catch(e){ window.cart=[]; }
+      try{ if(typeof updateCartUI==='function') updateCartUI(); if(typeof renderCart==='function') renderCart(); }catch(e){}
+      try{ if(typeof showScreen==='function') showScreen('homeScreen'); }catch(e){}
+      setTimeout(function(){ window.location.href=url; },120);
+    }catch(err){
+      console.error('LINKO WhatsApp send error',err);
+      try{ toast('صار خطأ بالإرسال، أعد المحاولة'); }catch(e){ alert('صار خطأ بالإرسال، أعد المحاولة'); }
+    }
+  };
+
+  // تنظيف نصوص الإدارة الظاهرة للمستخدم
+  function cleanAdminTexts(){
+    document.querySelectorAll('small').forEach(function(el){
+      const txt=(el.textContent||'').trim();
+      if(txt.includes('رمز الإدارة الحالي') || txt.includes('محمية برمز')) el.remove();
+    });
+    document.querySelectorAll('*').forEach(function(el){
+      if(el.childNodes.length===1 && el.childNodes[0].nodeType===3){
+        const t=el.textContent||'';
+        if(t.includes('صفحة الإدارة محمية') || t.includes('صفحة الادارة محمية')) el.textContent=t.replace(/صفحة (الإدارة|الادارة) محمية برمز سري/g,'').trim();
+      }
+    });
+    const btn=document.querySelector('#cartSheet .btn[onclick*="sendOrderWhatsApp"]'); if(btn){ btn.disabled=false; btn.type='button'; btn.style.pointerEvents='auto'; }
+  }
+  ['DOMContentLoaded','load','pageshow','focus'].forEach(ev=>window.addEventListener(ev,cleanAdminTexts));
+  setTimeout(cleanAdminTexts,80); setTimeout(cleanAdminTexts,700);
 })();
 </script>
 
@@ -1907,7 +2059,7 @@ body.linko-grocery-all .cats{display:none!important;visibility:hidden!important;
     const title=(currentBranch&&currentBranch.name)?currentBranch.name:'هايبر ماركت النخبة';
     const msg=`طلب جديد - ${title}\n\nالاسم: ${n.value}\nالمنطقة: ${a.value}\nالهاتف: ${p.value}\nنوع الطلب: ${delivery}\n\nالمنتجات:\n${lines}\n\nالمجموع النهائي: ${money(totalNumber)}\nالرصيد قبل الطلب: ${money(bal)}\nالرصيد المتبقي: ${money(bal-totalNumber)}\n\nتم إرسال الطلب من نظام هايبر ماركت النخبة`;
     deductMemberBalance(totalNumber);
-    const phone=(typeof WA!=='undefined'&&WA)?WA:'9647747248826'; const url=`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    const phone=(typeof WA!=='undefined'&&WA)?WA:'9647887624967'; const url=`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
     try{ document.getElementById('cartSheet')?.classList.remove('show'); document.body.classList.remove('cart-page-open'); document.documentElement.classList.remove('cart-page-open-html'); document.body.style.position=''; document.body.style.overflow=''; document.body.style.height=''; }catch(e){}
     cart=[]; updateCartUI(); renderCart(); showScreen('homeScreen');
     setTimeout(()=>{ try{ window.open(url,'_blank'); }catch(e){ window.location.href=url; } },120);
@@ -2361,7 +2513,7 @@ body.linko-grocery-all .cats{display:none!important;visibility:hidden!important;
     const lines=cart.map((x,i)=>`${i+1}. ${x.name}\nالكمية: ${amountText(x)}${x.restaurantId?'\nالمطعم: '+(restaurants.find(r=>r.id===x.restaurantId)?.name||''):''}`).join('\n--------------------\n');
     const title=currentBranch?.name||'هايبر ماركت النخبة';
     const msg=`طلب جديد - ${title}\n\nالاسم: ${n.value}\nالمنطقة: ${a.value}\nالهاتف: ${p.value}\nنوع الطلب: ${delivery}\n\nالمنتجات:\n${lines}\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;
-    const url=`https://wa.me/${WA||'9647747248826'}?text=${encodeURIComponent(msg)}`;
+    const url=`https://wa.me/${WA||'9647887624967'}?text=${encodeURIComponent(msg)}`;
     try{cartSheet.classList.remove('show');document.body.classList.remove('cart-page-open');document.documentElement.classList.remove('cart-page-open-html')}catch(e){}
     cart=[];updateCartUI();renderCart();showScreen('homeScreen');
     setTimeout(()=>{try{window.open(url,'_blank')}catch(e){location.href=url}},120);
@@ -2506,7 +2658,7 @@ body.linko-grocery-all .cats{display:none!important;visibility:hidden!important;
   window.addToCart=function(id,btn){const pr=products.find(x=>x.id===id);if(!pr)return;const amount=Math.max(0,Number(getSelectedAmount(id)||1));if(!amount){toast('اكتب كمية صحيحة');return}const t=unitTypeFor(pr);let item=cart.find(x=>x.id===id);if(item)item.qty=Number((Number(item.qty||0)+amount).toFixed(2));else cart.push({...pr,qty:amount,unitType:t,price:0});if(btn){btn.classList.add('added','bump');btn.textContent='تمت الإضافة ✓';setTimeout(()=>btn.classList.remove('bump'),300)}updateCartUI()};
   window.renderCart=function(){if(!cartList)return;cartList.innerHTML=cart.length?cart.map(x=>`<div class="cart-item"><img src="${x.img}"><div><h4>${x.name}</h4><small>${amountText(x)}${x.restaurantId?' • '+(restaurants.find(r=>r.id===x.restaurantId)?.name||'مطعم'):''}</small></div><div class="qty"><button onclick="changeQty(${x.id},1)">+</button><b>${amountText(x)}</b><button onclick="changeQty(${x.id},-1)">−</button></div></div>`).join(''):'<div class="empty">السلة فارغة حالياً</div>'};
   window.changeQty=function(id,d){const it=cart.find(x=>x.id===id);if(!it)return;const step=unitStep(it.unitType||unitTypeFor(it));it.qty=Number((Number(it.qty||0)+d*step).toFixed(2));if(it.qty<=0)cart=cart.filter(x=>x!==it);updateCartUI();renderProducts()};
-  window.sendOrderWhatsApp=function(){if(!cart.length){toast('السلة فارغة');return}const n=document.getElementById('orderName'),a=document.getElementById('orderArea'),ph=document.getElementById('orderPhone');if(!n?.value||!a?.value||!ph?.value){toast('أكمل الاسم والمنطقة ورقم الهاتف');return}const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';const lines=cart.map((x,i)=>`${i+1}. ${x.name}\nالكمية: ${amountText(x)}${x.restaurantId?'\nالمطعم: '+(restaurants.find(r=>r.id===x.restaurantId)?.name||''):''}`).join('\n--------------------\n');const msg=`طلب جديد - ${currentBranch?.name||'هايبر ماركت النخبة'}\n\nالاسم: ${n.value}\nالمنطقة: ${a.value}\nالهاتف: ${ph.value}\nنوع الطلب: ${delivery}\n\nالمنتجات:\n${lines}\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;try{cartSheet.classList.remove('show');document.body.classList.remove('cart-page-open');document.documentElement.classList.remove('cart-page-open-html')}catch(e){}cart=[];updateCartUI();renderCart();showScreen('homeScreen');setTimeout(()=>{try{window.open(`https://wa.me/${WA||'9647747248826'}?text=${encodeURIComponent(msg)}`,'_blank')}catch(e){location.href=`https://wa.me/${WA||'9647747248826'}?text=${encodeURIComponent(msg)}`}},120)};
+  window.sendOrderWhatsApp=function(){if(!cart.length){toast('السلة فارغة');return}const n=document.getElementById('orderName'),a=document.getElementById('orderArea'),ph=document.getElementById('orderPhone');if(!n?.value||!a?.value||!ph?.value){toast('أكمل الاسم والمنطقة ورقم الهاتف');return}const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';const lines=cart.map((x,i)=>`${i+1}. ${x.name}\nالكمية: ${amountText(x)}${x.restaurantId?'\nالمطعم: '+(restaurants.find(r=>r.id===x.restaurantId)?.name||''):''}`).join('\n--------------------\n');const msg=`طلب جديد - ${currentBranch?.name||'هايبر ماركت النخبة'}\n\nالاسم: ${n.value}\nالمنطقة: ${a.value}\nالهاتف: ${ph.value}\nنوع الطلب: ${delivery}\n\nالمنتجات:\n${lines}\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;try{cartSheet.classList.remove('show');document.body.classList.remove('cart-page-open');document.documentElement.classList.remove('cart-page-open-html')}catch(e){}cart=[];updateCartUI();renderCart();showScreen('homeScreen');setTimeout(()=>{try{window.open(`https://wa.me/${WA||'9647887624967'}?text=${encodeURIComponent(msg)}`,'_blank')}catch(e){location.href=`https://wa.me/${WA||'9647887624967'}?text=${encodeURIComponent(msg)}`}},120)};
   const ps=document.getElementById('productSearch');if(ps)ps.oninput=()=>renderProducts();
   renderBranches();
 })();
@@ -2810,7 +2962,7 @@ body.linko-all-products .cats{display:none!important;visibility:hidden!important
   window.backRestaurants=function(){linkoRestaurant=null;if(branchTitle)branchTitle.textContent='فرع المطاعم';renderProducts()};
   window.renderProducts=function(){setBody();ensureButcher();if(linkoType==='produce'){renderGrouped(PRODUCE_CATS,'كل منتجات المخضر والفواكه ظاهرة مباشرة بدون اختيار أقسام');return}if(linkoType==='meat'){renderGrouped(MEAT_CATS,'تمت إضافة جميع منتجات اللحوم والدواجن والأسماك بالتفصيل');return}const grid=document.getElementById('productsGrid');if(!grid)return;if(linkoType==='empty'){grid.className='products';grid.innerHTML=`<div class="linko-empty-branch-real"><b>${esc(currentBranch?.name||'فرع')}</b>هذا الفرع مضاف حالياً بدون منتجات، وسيتم تعبئته لاحقاً.</div>`;return}if(linkoType==='grocery'){grid.className='products';const q=(document.getElementById('productSearch')?.value||'').trim().toLowerCase();if(!activeCat||!GROCERY_CATS.includes(activeCat))activeCat=GROCERY_CATS[0];let list=products.filter(p=>!p.restaurantId&&GROCERY_CATS.includes(p.cat)&&(q?(p.name.toLowerCase().includes(q)||p.cat.toLowerCase().includes(q)):p.cat===activeCat));grid.innerHTML=(list.length?list.map(card).join(''):'<div class="products-fix-empty">لا توجد منتجات داخل هذا القسم</div>');return}if(linkoType==='restaurants'){if(!linkoRestaurant){grid.className='restaurant-grid';grid.innerHTML=restaurantsFromProducts().map(r=>`<button class="restaurant-card" onclick="openRestaurant('${r.id}')"><img src="${r.img}" alt="${esc(r.name)}"><h3>${esc(r.name)}</h3><p>${esc(r.note)}</p></button>`).join('');return}grid.className='restaurant-menu';const meals=products.filter(p=>p.restaurantId===linkoRestaurant.id&&p.menuType==='وجبات'),drinks=products.filter(p=>p.restaurantId===linkoRestaurant.id&&p.menuType==='مشروبات');grid.innerHTML=`<div class="restaurant-menu-head"><div><h2>${esc(linkoRestaurant.name)}</h2><p>${esc(linkoRestaurant.note)}</p></div><button onclick="backRestaurants()">رجوع للمطاعم</button></div><div class="swipe-title"><h3>الوجبات</h3><span class="swipe-hint">اسحب ←</span></div><div class="menu-rail">${meals.map(card).join('')}</div><div class="swipe-title"><h3>المشروبات</h3><span class="swipe-hint">اسحب ←</span></div><div class="menu-rail">${drinks.map(card).join('')}</div>`;}}
   window.addToCart=function(id,btn){const p=products.find(x=>String(x.id)===String(id));if(!p)return;const amount=Math.max(0,Number(getSelectedAmount(id)||1));if(!amount){if(typeof toast==='function')toast('اكتب كمية صحيحة');return}const t=unitType(p);let item=cart.find(x=>String(x.id)===String(id));if(item)item.qty=Number((Number(item.qty||0)+amount).toFixed(2));else cart.push({...p,qty:amount,unitType:t,price:0,butcher:document.getElementById('butcherName')?.value||''});if(btn){btn.classList.add('added','bump');btn.textContent='تمت الإضافة ✓';setTimeout(()=>btn.classList.remove('bump'),300)}updateCartUI()};
-  window.sendOrderWhatsApp=function(){if(!cart.length){toast('السلة فارغة');return}const n=document.getElementById('orderName'),a=document.getElementById('orderArea'),ph=document.getElementById('orderPhone');if(!n?.value||!a?.value||!ph?.value){toast('أكمل الاسم والمنطقة ورقم الهاتف');return}const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';const butcher=document.getElementById('butcherName')?.value||cart.find(x=>x.butcher)?.butcher||'';const lines=cart.map((x,i)=>`${i+1}. ${x.name}\nالكمية: ${amountText(x)}${x.restaurantId?'\nالمطعم: '+String(x.cat||'').replace(/^وجبات |^مشروبات /,''):''}${x.desc?'\nملاحظة المنتج: '+x.desc:''}`).join('\n--------------------\n');const msg=`طلب جديد - ${currentBranch?.name||'هايبر ماركت النخبة'}\n\nالاسم: ${n.value}\nالمنطقة: ${a.value}\nالهاتف: ${ph.value}\nنوع الطلب: ${delivery}${butcher?'\nالكصاب المطلوب: '+butcher:''}\n\nالمنتجات:\n${lines}\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;try{cartSheet.classList.remove('show');document.body.classList.remove('cart-page-open');document.documentElement.classList.remove('cart-page-open-html')}catch(e){}cart=[];updateCartUI();if(typeof renderCart==='function')renderCart();showScreen('homeScreen');setTimeout(()=>{window.open(`https://wa.me/${WA||'9647747248826'}?text=${encodeURIComponent(msg)}`,'_blank')},120)};
+  window.sendOrderWhatsApp=function(){if(!cart.length){toast('السلة فارغة');return}const n=document.getElementById('orderName'),a=document.getElementById('orderArea'),ph=document.getElementById('orderPhone');if(!n?.value||!a?.value||!ph?.value){toast('أكمل الاسم والمنطقة ورقم الهاتف');return}const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';const butcher=document.getElementById('butcherName')?.value||cart.find(x=>x.butcher)?.butcher||'';const lines=cart.map((x,i)=>`${i+1}. ${x.name}\nالكمية: ${amountText(x)}${x.restaurantId?'\nالمطعم: '+String(x.cat||'').replace(/^وجبات |^مشروبات /,''):''}${x.desc?'\nملاحظة المنتج: '+x.desc:''}`).join('\n--------------------\n');const msg=`طلب جديد - ${currentBranch?.name||'هايبر ماركت النخبة'}\n\nالاسم: ${n.value}\nالمنطقة: ${a.value}\nالهاتف: ${ph.value}\nنوع الطلب: ${delivery}${butcher?'\nالكصاب المطلوب: '+butcher:''}\n\nالمنتجات:\n${lines}\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;try{cartSheet.classList.remove('show');document.body.classList.remove('cart-page-open');document.documentElement.classList.remove('cart-page-open-html')}catch(e){}cart=[];updateCartUI();if(typeof renderCart==='function')renderCart();showScreen('homeScreen');setTimeout(()=>{window.open(`https://wa.me/${WA||'9647887624967'}?text=${encodeURIComponent(msg)}`,'_blank')},120)};
   const ps=document.getElementById('productSearch');if(ps)ps.oninput=()=>renderProducts();
   setInterval(setBody,500);
   if(typeof renderBranches==='function')renderBranches();
@@ -2916,7 +3068,7 @@ body.linko-all-products .cats{display:none!important;visibility:hidden!important
   window.backRestaurants=function(){linkoRestaurant=null;if(branchTitle)branchTitle.textContent='فرع المطاعم';renderProducts()};
   window.renderProducts=function(){setBody();ensureButcher();if(linkoType==='produce'){renderGrouped(PRODUCE_CATS,'كل منتجات المخضر والفواكه ظاهرة مباشرة بدون اختيار أقسام','produce');return}if(linkoType==='meat'){renderGrouped(MEAT_CATS,'تمت إضافة جميع منتجات اللحوم والدواجن والأسماك بالتفصيل','meat');return}if(linkoType==='kitchen'){renderGrouped(KITCHEN_CATS,'تمت إضافة جميع منتجات فرع أجهزة المطبخ والأجهزة المنزلية بالتفصيل','kitchen');return}const grid=document.getElementById('productsGrid');if(!grid)return;if(linkoType==='empty'){grid.className='products';grid.innerHTML=`<div class="linko-empty-branch-real"><b>${esc(currentBranch?.name||'فرع')}</b>هذا الفرع مضاف حالياً بدون منتجات، وسيتم تعبئته لاحقاً.</div>`;return}if(linkoType==='grocery'){grid.className='products';const q=(document.getElementById('productSearch')?.value||'').trim().toLowerCase();if(!activeCat||!GROCERY_CATS.includes(activeCat))activeCat=GROCERY_CATS[0];let list=products.filter(p=>!p.restaurantId&&GROCERY_CATS.includes(p.cat)&&(q?(p.name.toLowerCase().includes(q)||p.cat.toLowerCase().includes(q)):p.cat===activeCat));grid.innerHTML=list.length?list.map(card).join(''):'<div class="products-fix-empty">لا توجد منتجات داخل هذا القسم</div>';return}if(linkoType==='restaurants'){if(!linkoRestaurant){grid.className='restaurant-grid';grid.innerHTML=restaurantsFromProducts().map(r=>`<button class="restaurant-card" onclick="openRestaurant('${r.id}')"><img src="${r.img}" alt="${esc(r.name)}"><h3>${esc(r.name)}</h3><p>${esc(r.note)}</p></button>`).join('');return}grid.className='restaurant-menu';const meals=products.filter(p=>p.restaurantId===linkoRestaurant.id&&p.menuType==='وجبات'),drinks=products.filter(p=>p.restaurantId===linkoRestaurant.id&&p.menuType==='مشروبات');grid.innerHTML=`<div class="restaurant-menu-head"><div><h2>${esc(linkoRestaurant.name)}</h2><p>${esc(linkoRestaurant.note)}</p></div><button onclick="backRestaurants()">رجوع للمطاعم</button></div><div class="swipe-title"><h3>الوجبات</h3><span class="swipe-hint">اسحب ←</span></div><div class="menu-rail">${meals.map(card).join('')}</div><div class="swipe-title"><h3>المشروبات</h3><span class="swipe-hint">اسحب ←</span></div><div class="menu-rail">${drinks.map(card).join('')}</div>`}}
   window.addToCart=function(id,btn){const p=products.find(x=>String(x.id)===String(id));if(!p)return;const amount=Math.max(0,Number(getSelectedAmount(id)||1));if(!amount){if(typeof toast==='function')toast('اكتب كمية صحيحة');return}const t=unitType(p);let item=cart.find(x=>String(x.id)===String(id));if(item)item.qty=Number((Number(item.qty||0)+amount).toFixed(2));else cart.push({...p,qty:amount,unitType:t,price:0,butcher:document.getElementById('butcherName')?.value||''});if(btn){btn.classList.add('added','bump');btn.textContent='تمت الإضافة ✓';setTimeout(()=>btn.classList.remove('bump'),300)}updateCartUI()};
-  window.sendOrderWhatsApp=function(){if(!cart.length){toast('السلة فارغة');return}const n=document.getElementById('orderName'),a=document.getElementById('orderArea'),ph=document.getElementById('orderPhone');if(!n?.value||!a?.value||!ph?.value){toast('أكمل الاسم والمنطقة ورقم الهاتف');return}const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';const butcher=document.getElementById('butcherName')?.value||cart.find(x=>x.butcher)?.butcher||'';const lines=cart.map((x,i)=>`${i+1}. ${x.name}\nالكمية: ${amountText(x)}${x.restaurantId?'\nالمطعم: '+String(x.cat||'').replace(/^وجبات |^مشروبات /,''):''}${x.desc?'\nملاحظة المنتج: '+x.desc:''}`).join('\n--------------------\n');const msg=`طلب جديد - ${currentBranch?.name||'هايبر ماركت النخبة'}\n\nالاسم: ${n.value}\nالمنطقة: ${a.value}\nالهاتف: ${ph.value}\nنوع الطلب: ${delivery}${butcher?'\nالكصاب المطلوب: '+butcher:''}\n\nالمنتجات:\n${lines}\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;try{cartSheet.classList.remove('show');document.body.classList.remove('cart-page-open');document.documentElement.classList.remove('cart-page-open-html')}catch(e){}cart=[];updateCartUI();if(typeof renderCart==='function')renderCart();showScreen('homeScreen');setTimeout(()=>{window.open(`https://wa.me/${WA||'9647747248826'}?text=${encodeURIComponent(msg)}`,'_blank')},120)};
+  window.sendOrderWhatsApp=function(){if(!cart.length){toast('السلة فارغة');return}const n=document.getElementById('orderName'),a=document.getElementById('orderArea'),ph=document.getElementById('orderPhone');if(!n?.value||!a?.value||!ph?.value){toast('أكمل الاسم والمنطقة ورقم الهاتف');return}const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';const butcher=document.getElementById('butcherName')?.value||cart.find(x=>x.butcher)?.butcher||'';const lines=cart.map((x,i)=>`${i+1}. ${x.name}\nالكمية: ${amountText(x)}${x.restaurantId?'\nالمطعم: '+String(x.cat||'').replace(/^وجبات |^مشروبات /,''):''}${x.desc?'\nملاحظة المنتج: '+x.desc:''}`).join('\n--------------------\n');const msg=`طلب جديد - ${currentBranch?.name||'هايبر ماركت النخبة'}\n\nالاسم: ${n.value}\nالمنطقة: ${a.value}\nالهاتف: ${ph.value}\nنوع الطلب: ${delivery}${butcher?'\nالكصاب المطلوب: '+butcher:''}\n\nالمنتجات:\n${lines}\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;try{cartSheet.classList.remove('show');document.body.classList.remove('cart-page-open');document.documentElement.classList.remove('cart-page-open-html')}catch(e){}cart=[];updateCartUI();if(typeof renderCart==='function')renderCart();showScreen('homeScreen');setTimeout(()=>{window.open(`https://wa.me/${WA||'9647887624967'}?text=${encodeURIComponent(msg)}`,'_blank')},120)};
   const ps=document.getElementById('productSearch');if(ps)ps.oninput=()=>renderProducts();
   setInterval(setBody,500);
   if(typeof renderBranches==='function')renderBranches();
@@ -3044,7 +3196,7 @@ body.linko-grocery-all .cats{display:none!important;visibility:hidden!important;
   window.addToCart=function(id,btn){const p=products.find(x=>String(x.id)===String(id)); if(p&&p.linkoGroceryFull){const amount=Math.max(0,Number(getAmount(id)||1));if(!amount){if(typeof toast==='function')toast('اكتب كمية صحيحة');return}const brand=document.getElementById('brandSelect_'+id)?.value||'';const note=document.getElementById('groceryNote_'+id)?.value||'';let details=[]; if(brand && brand!=='اختيار الماركة' && brand!=='اختيار الماركة/العلامة' && brand!=='اختيار النوع/الماركة' && brand!=='اختيار النوع')details.push('الماركة/النوع: '+brand); if(note)details.push('طلب الزبون: '+note); let item=cart.find(x=>String(x.id)===String(id)&&x.brand===brand&&x.groceryNote===note); if(item)item.qty=Number((Number(item.qty||0)+amount).toFixed(2)); else cart.push({...p,qty:amount,unitType:unitKind(p),price:0,brand,groceryNote:note,desc:[p.desc, ...details].filter(Boolean).join(' | ')}); if(btn){btn.classList.add('added','bump');btn.textContent='تمت الإضافة ✓';setTimeout(()=>btn.classList.remove('bump'),300)} updateCartUI(); return;} if(typeof oldAddToCart==='function')oldAddToCart(id,btn); };
   const oldSend=window.sendOrderWhatsApp;
   window.sendOrderWhatsApp=function(){ if(!cart.some(x=>x.linkoGroceryFull)){ if(typeof oldSend==='function')return oldSend(); }
-    if(!cart.length){toast('السلة فارغة');return}const n=document.getElementById('orderName'),a=document.getElementById('orderArea'),ph=document.getElementById('orderPhone');if(!n?.value||!a?.value||!ph?.value){toast('أكمل الاسم والمنطقة ورقم الهاتف');return}const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';const butcher=document.getElementById('butcherName')?.value||cart.find(x=>x.butcher)?.butcher||'';const lines=cart.map((x,i)=>`${i+1}. ${x.name}\nالكمية: ${typeof amountText==='function'?amountText(x):(x.qty+' عدد')}${x.restaurantId?'\nالمطعم: '+String(x.cat||'').replace(/^وجبات |^مشروبات /,''):''}${x.brand?'\nالماركة/النوع: '+x.brand:''}${x.groceryNote?'\nملاحظة الزبون: '+x.groceryNote:''}${x.desc?'\nتفاصيل: '+x.desc:''}`).join('\n--------------------\n');const msg=`طلب جديد - ${currentBranch?.name||'هايبر ماركت النخبة'}\n\nالاسم: ${n.value}\nالمنطقة: ${a.value}\nالهاتف: ${ph.value}\nنوع الطلب: ${delivery}${butcher?'\nالكصاب المطلوب: '+butcher:''}\n\nالمنتجات:\n${lines}\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;try{cartSheet.classList.remove('show');document.body.classList.remove('cart-page-open');document.documentElement.classList.remove('cart-page-open-html')}catch(e){}cart=[];updateCartUI();if(typeof renderCart==='function')renderCart();showScreen('homeScreen');setTimeout(()=>{window.open(`https://wa.me/${WA||'9647747248826'}?text=${encodeURIComponent(msg)}`,'_blank')},120); };
+    if(!cart.length){toast('السلة فارغة');return}const n=document.getElementById('orderName'),a=document.getElementById('orderArea'),ph=document.getElementById('orderPhone');if(!n?.value||!a?.value||!ph?.value){toast('أكمل الاسم والمنطقة ورقم الهاتف');return}const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';const butcher=document.getElementById('butcherName')?.value||cart.find(x=>x.butcher)?.butcher||'';const lines=cart.map((x,i)=>`${i+1}. ${x.name}\nالكمية: ${typeof amountText==='function'?amountText(x):(x.qty+' عدد')}${x.restaurantId?'\nالمطعم: '+String(x.cat||'').replace(/^وجبات |^مشروبات /,''):''}${x.brand?'\nالماركة/النوع: '+x.brand:''}${x.groceryNote?'\nملاحظة الزبون: '+x.groceryNote:''}${x.desc?'\nتفاصيل: '+x.desc:''}`).join('\n--------------------\n');const msg=`طلب جديد - ${currentBranch?.name||'هايبر ماركت النخبة'}\n\nالاسم: ${n.value}\nالمنطقة: ${a.value}\nالهاتف: ${ph.value}\nنوع الطلب: ${delivery}${butcher?'\nالكصاب المطلوب: '+butcher:''}\n\nالمنتجات:\n${lines}\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;try{cartSheet.classList.remove('show');document.body.classList.remove('cart-page-open');document.documentElement.classList.remove('cart-page-open-html')}catch(e){}cart=[];updateCartUI();if(typeof renderCart==='function')renderCart();showScreen('homeScreen');setTimeout(()=>{window.open(`https://wa.me/${WA||'9647887624967'}?text=${encodeURIComponent(msg)}`,'_blank')},120); };
   const ps=document.getElementById('productSearch'); if(ps)ps.oninput=()=>renderProducts();
   setInterval(setGroceryBody,400);
 })();
@@ -3134,7 +3286,7 @@ body.linko-pastry-all .cats{display:none!important;visibility:hidden!important;p
   const prevAdd=window.addToCart;
   window.addToCart=function(id,btn){const p=Array.isArray(products)?products.find(x=>String(x.id)===String(id)):null;if(p&&p.linkoPastryFull){const amount=Math.max(0,Number(getAmount(id)||1));if(!amount){if(typeof toast==='function')toast('اكتب كمية صحيحة');return}const option=document.getElementById('pastryOption_'+id)?.value||'';const note=document.getElementById('pastryNote_'+id)?.value||'';let item=cart.find(x=>String(x.id)===String(id)&&x.pastryOption===option&&x.pastryNote===note);if(item)item.qty=Number((Number(item.qty||0)+amount).toFixed(2));else cart.push({...p,qty:amount,unitType:p.unitKind||'piece',price:0,pastryOption:option,pastryNote:note,desc:[p.desc, option&&option!=='اختيار النوع'&&option!=='اختيار الحشوة'&&option!=='اختيار النكهة'?('النوع/الحشوة: '+option):'', note?('ملاحظة الزبون: '+note):''].filter(Boolean).join(' | ')});if(btn){btn.classList.add('added','bump');btn.textContent='تمت الإضافة ✓';setTimeout(()=>btn.classList.remove('bump'),300)}if(typeof updateCartUI==='function')updateCartUI();return}if(typeof prevAdd==='function')prevAdd(id,btn);};
   const prevSend=window.sendOrderWhatsApp;
-  window.sendOrderWhatsApp=function(){if(!cart.some(x=>x.linkoPastryFull)){if(typeof prevSend==='function')return prevSend();}if(!cart.length){toast('السلة فارغة');return}const n=document.getElementById('orderName'),a=document.getElementById('orderArea'),ph=document.getElementById('orderPhone');if(!n?.value||!a?.value||!ph?.value){toast('أكمل الاسم والمنطقة ورقم الهاتف');return}const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';const lines=cart.map((x,i)=>`${i+1}. ${x.name}\nالكمية: ${typeof amountText==='function'?amountText(x):(x.qty+' عدد')}${x.pastryOption?'\nالنوع/الحشوة: '+x.pastryOption:''}${x.pastryNote?'\nملاحظة الزبون: '+x.pastryNote:''}${x.brand?'\nالماركة/النوع: '+x.brand:''}${x.groceryNote?'\nملاحظة الزبون: '+x.groceryNote:''}${x.desc?'\nتفاصيل: '+x.desc:''}`).join('\n--------------------\n');const msg=`طلب جديد - ${currentBranch?.name||'هايبر ماركت النخبة'}\n\nالاسم: ${n.value}\nالمنطقة: ${a.value}\nالهاتف: ${ph.value}\nنوع الطلب: ${delivery}\n\nالمنتجات:\n${lines}\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;try{cartSheet.classList.remove('show');document.body.classList.remove('cart-page-open');document.documentElement.classList.remove('cart-page-open-html')}catch(e){}cart=[];if(typeof updateCartUI==='function')updateCartUI();if(typeof renderCart==='function')renderCart();if(typeof showScreen==='function')showScreen('homeScreen');setTimeout(()=>{window.open(`https://wa.me/${WA||'9647747248826'}?text=${encodeURIComponent(msg)}`,'_blank')},120);};
+  window.sendOrderWhatsApp=function(){if(!cart.some(x=>x.linkoPastryFull)){if(typeof prevSend==='function')return prevSend();}if(!cart.length){toast('السلة فارغة');return}const n=document.getElementById('orderName'),a=document.getElementById('orderArea'),ph=document.getElementById('orderPhone');if(!n?.value||!a?.value||!ph?.value){toast('أكمل الاسم والمنطقة ورقم الهاتف');return}const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';const lines=cart.map((x,i)=>`${i+1}. ${x.name}\nالكمية: ${typeof amountText==='function'?amountText(x):(x.qty+' عدد')}${x.pastryOption?'\nالنوع/الحشوة: '+x.pastryOption:''}${x.pastryNote?'\nملاحظة الزبون: '+x.pastryNote:''}${x.brand?'\nالماركة/النوع: '+x.brand:''}${x.groceryNote?'\nملاحظة الزبون: '+x.groceryNote:''}${x.desc?'\nتفاصيل: '+x.desc:''}`).join('\n--------------------\n');const msg=`طلب جديد - ${currentBranch?.name||'هايبر ماركت النخبة'}\n\nالاسم: ${n.value}\nالمنطقة: ${a.value}\nالهاتف: ${ph.value}\nنوع الطلب: ${delivery}\n\nالمنتجات:\n${lines}\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;try{cartSheet.classList.remove('show');document.body.classList.remove('cart-page-open');document.documentElement.classList.remove('cart-page-open-html')}catch(e){}cart=[];if(typeof updateCartUI==='function')updateCartUI();if(typeof renderCart==='function')renderCart();if(typeof showScreen==='function')showScreen('homeScreen');setTimeout(()=>{window.open(`https://wa.me/${WA||'9647887624967'}?text=${encodeURIComponent(msg)}`,'_blank')},120);};
   const ps=document.getElementById('productSearch');if(ps)ps.oninput=()=>renderProducts();
   ensurePastryData();
   setTimeout(()=>{try{renderBranches();}catch(e){}},120);
@@ -3306,127 +3458,35 @@ body.linko-restaurant-unified .cats{display:none!important;visibility:hidden!imp
   const prevChange=window.changeQty;
   window.changeQty=function(id,d){const it=Array.isArray(cart)?cart.find(x=>String(x.id)===String(id)):null;if(it&&it.linkoRestaurantUnified){let step=(it.unitType==='kg')?.25:1;it.qty=Number((Number(it.qty||0)+d*step).toFixed(2));if(it.qty<=0)cart=cart.filter(x=>x!==it);if(typeof updateCartUI==='function')updateCartUI();if(typeof renderProducts==='function')renderProducts();return;}if(typeof prevChange==='function')prevChange(id,d);};
   const prevSend=window.sendOrderWhatsApp;
-  window.sendOrderWhatsApp=function(){const hasRest=Array.isArray(cart)&&cart.some(x=>x.linkoRestaurantUnified);if(!hasRest){if(typeof prevSend==='function')return prevSend();return;}if(!cart.length){toast('السلة فارغة');return;}const n=document.getElementById('orderName'),a=document.getElementById('orderArea'),ph=document.getElementById('orderPhone');if(!n?.value||!a?.value||!ph?.value){toast('أكمل الاسم والمنطقة ورقم الهاتف');return;}const rname=cart.find(x=>x.linkoRestaurantUnified)?.restaurantName||getRestName();if(!rname){toast('اكتب اسم المطعم المطلوب');return;}const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';const lines=cart.map((x,i)=>`${i+1}. ${x.name}\nالكمية: ${x.linkoRestaurantUnified?restAmountText(x):(typeof amountText==='function'?amountText(x):x.qty)}${x.linkoRestaurantUnified?'\nالمطعم المطلوب: '+(x.restaurantName||rname):''}${x.restOption?'\nالتفاصيل: '+x.restOption:''}${x.customerNote?'\nوصف/ملاحظة الزبون: '+x.customerNote:''}${x.desc?'\nمعلومات الصنف: '+x.desc:''}`).join('\n--------------------\n');const msg=`طلب جديد - فرع المطاعم\n\nالاسم: ${n.value}\nالمنطقة: ${a.value}\nالهاتف: ${ph.value}\nنوع الطلب: ${delivery}\nالمطعم المطلوب: ${rname}\n\nتنبيه للزبون: الأفضل الطلب من مطعم واحد حتى لا يتأخر تجهيز ووصول الطلب.\n\nالمنتجات:\n${lines}\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;try{cartSheet.classList.remove('show');document.body.classList.remove('cart-page-open');document.documentElement.classList.remove('cart-page-open-html')}catch(e){}cart=[];if(typeof updateCartUI==='function')updateCartUI();if(typeof renderCart==='function')renderCart();if(typeof showScreen==='function')showScreen('homeScreen');setTimeout(()=>{window.open(`https://wa.me/${WA||'9647747248826'}?text=${encodeURIComponent(msg)}`,'_blank')},120)};
+  window.sendOrderWhatsApp=function(){const hasRest=Array.isArray(cart)&&cart.some(x=>x.linkoRestaurantUnified);if(!hasRest){if(typeof prevSend==='function')return prevSend();return;}if(!cart.length){toast('السلة فارغة');return;}const n=document.getElementById('orderName'),a=document.getElementById('orderArea'),ph=document.getElementById('orderPhone');if(!n?.value||!a?.value||!ph?.value){toast('أكمل الاسم والمنطقة ورقم الهاتف');return;}const rname=cart.find(x=>x.linkoRestaurantUnified)?.restaurantName||getRestName();if(!rname){toast('اكتب اسم المطعم المطلوب');return;}const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';const lines=cart.map((x,i)=>`${i+1}. ${x.name}\nالكمية: ${x.linkoRestaurantUnified?restAmountText(x):(typeof amountText==='function'?amountText(x):x.qty)}${x.linkoRestaurantUnified?'\nالمطعم المطلوب: '+(x.restaurantName||rname):''}${x.restOption?'\nالتفاصيل: '+x.restOption:''}${x.customerNote?'\nوصف/ملاحظة الزبون: '+x.customerNote:''}${x.desc?'\nمعلومات الصنف: '+x.desc:''}`).join('\n--------------------\n');const msg=`طلب جديد - فرع المطاعم\n\nالاسم: ${n.value}\nالمنطقة: ${a.value}\nالهاتف: ${ph.value}\nنوع الطلب: ${delivery}\nالمطعم المطلوب: ${rname}\n\nتنبيه للزبون: الأفضل الطلب من مطعم واحد حتى لا يتأخر تجهيز ووصول الطلب.\n\nالمنتجات:\n${lines}\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;try{cartSheet.classList.remove('show');document.body.classList.remove('cart-page-open');document.documentElement.classList.remove('cart-page-open-html')}catch(e){}cart=[];if(typeof updateCartUI==='function')updateCartUI();if(typeof renderCart==='function')renderCart();if(typeof showScreen==='function')showScreen('homeScreen');setTimeout(()=>{window.open(`https://wa.me/${WA||'9647887624967'}?text=${encodeURIComponent(msg)}`,'_blank')},120)};
   const ps=document.getElementById('productSearch');if(ps)ps.oninput=()=>renderProducts();
   ensureData();setTimeout(()=>{try{renderBranches();}catch(e){}},120);
 })();
 </script>
 
 
-<!-- ===== LINKO FINAL QA + SECURITY + CART STABILITY PATCH ===== -->
-<style id="linkoFinalQaSecurityPatchStyle">
-/* تثبيت السلة على كل الأجهزة بدون تجميد الصفحة أو رجوع تلقائي للرئيسية */
-html,body{overflow-x:hidden!important;-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important;}
-#cartSheet.bottom-sheet.show{position:fixed!important;inset:0!important;display:block!important;background:#f6f7f9!important;z-index:99999!important;overflow:hidden!important;}
-#cartSheet .sheet{position:absolute!important;inset:0!important;width:100%!important;height:100dvh!important;max-height:100dvh!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;touch-action:pan-y!important;border-radius:0!important;background:#f6f7f9!important;padding:16px 14px calc(230px + env(safe-area-inset-bottom))!important;}
-#cartSheet .sheet-head{position:sticky!important;top:0!important;z-index:40!important;background:rgba(246,247,249,.98)!important;border-bottom:1px solid rgba(228,231,236,.9)!important;margin:-16px -14px 14px!important;padding:14px!important;}
-#cartSheet:not(.show){display:none!important;pointer-events:none!important;}
-body.cart-page-open{overflow:hidden!important;}
-.secure-admin-note{margin-top:10px;padding:10px 12px;border-radius:16px;background:#ecfdf3;border:1px solid #bbf7d0;color:#087443;font-weight:900;text-align:center;line-height:1.7;font-size:12px}.masked-code{letter-spacing:2px;font-weight:900;color:#64748b}.qa-safe-badge{display:inline-flex;margin-top:6px;padding:4px 8px;border-radius:999px;background:#ecfdf3;color:#087443;font-size:11px;font-weight:900}
-.cart-item input,.cart-item button,#cartSheet input,#cartSheet button,#cartSheet textarea,#cartSheet select{touch-action:manipulation!important;}
-@media(min-width:900px){#cartSheet .sheet{left:50%!important;right:auto!important;width:min(900px,94vw)!important;transform:translateX(-50%)!important;border-radius:28px 28px 0 0!important;box-shadow:0 -20px 70px rgba(16,24,40,.16)!important}}
+<!-- ===== LINKO ABSOLUTE LAST OVERRIDE: WHATSAPP ACTIVE + ADMIN CODES V2 ===== -->
+<style id="linkoAbsoluteLastOverrideStyle">
+#adminLogin small{display:none!important}
+#cartSheet button[onclick*="sendOrderWhatsApp"],button[onclick="sendOrderWhatsApp()"]{opacity:1!important;pointer-events:auto!important;filter:none!important;cursor:pointer!important}
+.linko-admin-code-line{color:#475467;font-weight:900;line-height:1.8;margin-top:4px}.linko-admin-code-line b{direction:ltr;unicode-bidi:bidi-override;background:#f8fafc;border:1px solid var(--line,#e4e7ec);padding:3px 8px;border-radius:10px;color:#111827;display:inline-block}
 </style>
-<script id="linkoFinalQaSecurityPatchScript">
+<script id="linkoAbsoluteLastOverrideScript">
 (function(){
   'use strict';
-  const ADMIN_SECRET = String.fromCharCode(72,117,115,115,101,105,110,36,49,53);
-  const WA_SAFE = (typeof WA!=='undefined' && WA) ? WA : '9647747248826';
-  const STORE_KEY='hm_members';
-  function $(id){return document.getElementById(id)}
-  function safeText(v){return String(v??'').replace(/[&<>'"]/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]})}
-  function safeMembers(){
-    try{const raw=localStorage.getItem(STORE_KEY);const parsed=JSON.parse(raw||'[]');return Array.isArray(parsed)?parsed.filter(Boolean):[]}catch(e){localStorage.setItem(STORE_KEY,'[]');return []}
-  }
-  window.getMembers=function(){return safeMembers()};
-  window.setMembers=function(v){try{localStorage.setItem(STORE_KEY,JSON.stringify(Array.isArray(v)?v:[]))}catch(e){try{localStorage.removeItem(STORE_KEY)}catch(_){}}};
-  function maskCode(c){c=String(c||'');return c ? '••••••' + (c.length>2 ? c.slice(-2).replace(/./g,'•') : '') : 'غير معروض'}
-  function unlockScroll(){
-    try{document.body.classList.remove('cart-page-open','force-scroll-unlock');document.documentElement.classList.remove('cart-page-open-html');document.body.style.position='';document.body.style.height='';document.body.style.overflowY='';document.documentElement.style.position='';document.documentElement.style.height='';document.documentElement.style.overflowY='';}catch(e){}
-  }
-  function currentScreenId(){const s=document.querySelector('.screen.active');return s?s.id:''}
-  function amountLabel(x){try{if(typeof amountText==='function')return amountText(x)}catch(e){};return String(x?.qty||1)}
-  function fullItemLines(){
-    const arr=Array.isArray(window.cart)?window.cart:[];
-    return arr.map(function(x,i){
-      let line=(i+1)+'. '+(x.name||'منتج')+'\nالكمية: '+amountLabel(x);
-      if(x.restaurantName) line+='\nالمطعم المطلوب: '+x.restaurantName;
-      if(x.brand) line+='\nالماركة/العلامة: '+x.brand;
-      if(x.restOption && !/^اختيار/.test(x.restOption)) line+='\nالتفاصيل: '+x.restOption;
-      if(x.customerNote) line+='\nملاحظة الزبون: '+x.customerNote;
-      if(x.desc) line+='\nمعلومات الصنف: '+x.desc;
-      return line;
-    }).join('\n--------------------\n');
-  }
-  function restoreOrderFields(){
-    try{const saved=JSON.parse(localStorage.getItem('linko_order_fields')||'{}');['orderName','orderArea','orderPhone'].forEach(id=>{const el=$(id);if(el && saved[id] && !el.value)el.value=saved[id]})}catch(e){}
-  }
-  function saveOrderFields(){
-    try{const data={orderName:$('orderName')?.value||'',orderArea:$('orderArea')?.value||'',orderPhone:$('orderPhone')?.value||''};localStorage.setItem('linko_order_fields',JSON.stringify(data))}catch(e){}
-  }
-  ['orderName','orderArea','orderPhone'].forEach(id=>setTimeout(()=>{const el=$(id);if(el){el.addEventListener('input',saveOrderFields,{passive:true});el.addEventListener('change',saveOrderFields,{passive:true})}},200));
-  const oldShow=window.showScreen;
-  window.showScreen=function(id){unlockScroll();if(typeof oldShow==='function')oldShow(id);restoreOrderFields();};
-  window.openCart=function(){
-    const overlay=$('cartSheet'), sheet=overlay?.querySelector('.sheet'); if(!overlay||!sheet)return;
-    saveOrderFields(); if(typeof renderCart==='function')renderCart(); restoreOrderFields();
-    overlay.style.display='block'; overlay.style.pointerEvents='auto'; overlay.classList.add('show');
-    document.body.classList.add('cart-page-open'); document.documentElement.classList.add('cart-page-open-html');
-    requestAnimationFrame(()=>{try{sheet.scrollTop=0}catch(e){}});
-  };
-  window.closeCart=function(){
-    saveOrderFields(); const overlay=$('cartSheet'); if(overlay){overlay.classList.remove('show');overlay.style.display='none';overlay.style.pointerEvents='none'} unlockScroll(); restoreOrderFields();
-  };
-  const oldUpdate=window.updateCartUI;
-  window.updateCartUI=function(){try{if(typeof oldUpdate==='function')oldUpdate()}catch(e){};restoreOrderFields();};
-  const oldChangeQty=window.changeQty;
-  window.changeQty=function(id,d){
-    saveOrderFields();
-    try{if(typeof oldChangeQty==='function')oldChangeQty(id,d)}catch(e){console.warn('changeQty safe fallback',e)}
-    if($('cartSheet')?.classList.contains('show')){try{renderCart();restoreOrderFields()}catch(e){}}
-  };
-  window.adminLogin=function(){
-    const input=$('adminPass'); const val=(input?.value||'').trim();
-    if(val===ADMIN_SECRET){
-      const l=$('adminLogin'), c=$('adminContent'); if(l)l.classList.add('hidden'); if(c)c.classList.remove('hidden');
-      if(typeof renderRequests==='function')renderRequests();
-      if(typeof toast==='function')toast('تم دخول الإدارة بنجاح');
-      return;
-    }
-    if(typeof toast==='function')toast('رمز الإدارة غير صحيح');
-  };
-  window.renderRequests=function(){
-    const listBox=$('requestsList'); if(!listBox)return;
-    let list=safeMembers(); const q=(window.adminQuery||'').trim().toLowerCase();
-    if(q) list=list.filter(m=>[m.name,m.area,m.phone,m.status].join(' ').toLowerCase().includes(q));
-    try{ if(typeof phase2AdminBlocks==='function')phase2AdminBlocks(); }catch(e){}
-    const all=safeMembers();
-    if($('stAll')){stAll.textContent=all.length;stPending.textContent=all.filter(x=>x.status==='pending').length;stApproved.textContent=all.filter(x=>x.status==='approved').length;stBlocked.textContent=all.filter(x=>x.status==='rejected'||x.status==='stopped').length}
-    listBox.innerHTML=list.length?list.map(m=>`<div class="request" data-status="${safeText(m.status||'pending')}"><div><h3>${safeText(m.name)}</h3><p>المنطقة: ${safeText(m.area)}<br>الهاتف: ${safeText(m.phone)}<br>الرمز السري: <span class="masked-code">${maskCode(m.code)}</span></p><span class="status ${safeText(m.status||'pending')}">${typeof statusText==='function'?statusText(m.status):safeText(m.status||'pending')}</span><span class="qa-safe-badge">بيانات محمية</span></div><div class="req-actions"><button class="btn mini" onclick="setStatus(${Number(m.id)},'approved')">✅ موافقة</button><button class="btn danger mini" onclick="setStatus(${Number(m.id)},'rejected')">❌ رفض</button><button class="btn dark mini" onclick="setStatus(${Number(m.id)},'stopped')">🛑 إيقاف</button></div></div>`).join(''):'<div class="empty">لا توجد طلبات اشتراك حالياً</div>';
-    const loginBox=$('adminLogin'); if(loginBox && !loginBox.querySelector('.secure-admin-note'))loginBox.insertAdjacentHTML('beforeend','<div class="secure-admin-note">رمز الإدارة محمي ولا يظهر داخل الواجهة.</div>');
-  };
-  window.sendOrderWhatsApp=function(){
-    saveOrderFields();
-    const cartArr=Array.isArray(window.cart)?window.cart:[];
-    if(!cartArr.length){if(typeof toast==='function')toast('السلة فارغة');return;}
-    const n=$('orderName'), a=$('orderArea'), ph=$('orderPhone');
-    if(!n?.value.trim() || !a?.value.trim() || !ph?.value.trim()){if(typeof toast==='function')toast('أكمل الاسم والمنطقة ورقم الهاتف');return;}
-    const hasRest=cartArr.some(x=>x.linkoRestaurantUnified||x.restaurantName);
-    if(hasRest && !cartArr.find(x=>x.restaurantName)?.restaurantName){if(typeof toast==='function')toast('اكتب اسم المطعم المطلوب');return;}
-    const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';
-    const title=hasRest?'فرع المطاعم':((window.currentBranch&&currentBranch.name)?currentBranch.name:'هايبر ماركت النخبة');
-    const msg=`طلب جديد - ${title}\n\nالاسم: ${n.value.trim()}\nالمنطقة: ${a.value.trim()}\nالهاتف: ${ph.value.trim()}\nنوع الطلب: ${delivery}${hasRest?'\nتنبيه: الأفضل الطلب من مطعم واحد حتى لا يتأخر الطلب.':''}\n\nالمنتجات:\n${fullItemLines()}\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;
-    const url=`https://wa.me/${WA_SAFE}?text=${encodeURIComponent(msg)}`;
-    window.closeCart();
-    try{window.cart.length=0}catch(e){window.cart=[]}
-    try{if(typeof updateCartUI==='function')updateCartUI(); if(typeof renderCart==='function')renderCart(); if(typeof renderProducts==='function' && currentScreenId()==='productsScreen')renderProducts();}catch(e){}
-    setTimeout(()=>{try{window.open(url,'_blank','noopener')}catch(e){location.href=url}},120);
-  };
-  window.addEventListener('pageshow',unlockScroll,{passive:true});
-  window.addEventListener('focus',unlockScroll,{passive:true});
-  setTimeout(function(){
-    try{document.querySelectorAll('small').forEach(el=>{if(/رمز الإدارة الحالي|2026/.test(el.textContent||''))el.textContent='رمز الإدارة محمي وغير ظاهر داخل الواجهة';});}catch(e){}
-    try{if(typeof renderRequests==='function')renderRequests();}catch(e){}
-    restoreOrderFields();
-  },500);
+  const FINAL_WA='9647887624967';
+  const SECRET=['Hus','sein',String.fromCharCode(36),'15'].join('');
+  const $=id=>document.getElementById(id);
+  const clean=v=>String(v==null?'':v).replace(/[<>]/g,'').trim();
+  function notify(m){try{toast(m)}catch(e){alert(m)}}
+  function amt(x){try{if(typeof amountText==='function')return amountText(x)}catch(e){} return (x.qty||1)+' عدد'}
+  function hardCloseCart(){try{const c=$('cartSheet'); if(c){c.classList.remove('show'); c.style.display='none'; c.style.pointerEvents='none'}}catch(e){} try{document.body.classList.remove('cart-page-open','force-scroll-unlock');document.documentElement.classList.remove('cart-page-open-html');document.body.style.position='static';document.body.style.overflowY='auto';document.body.style.height='auto';document.documentElement.style.position='static';document.documentElement.style.overflowY='auto';document.documentElement.style.height='auto'}catch(e){}}
+  window.openCart=function(){const c=$('cartSheet'),s=c&&c.querySelector('.sheet'); if(!c||!s)return; try{renderCart()}catch(e){} c.style.display='block';c.style.pointerEvents='auto';c.classList.add('show');document.body.classList.add('cart-page-open');document.documentElement.classList.add('cart-page-open-html');setTimeout(()=>{try{s.scrollTop=0}catch(e){}},20)};
+  window.closeCart=hardCloseCart;
+  window.adminLogin=function(){const p=$('adminPass'); if(p&&p.value===SECRET){$('adminLogin')?.classList.add('hidden');$('adminContent')?.classList.remove('hidden');try{renderRequests()}catch(e){}}else notify('رمز الإدارة غير صحيح')};
+  window.renderRequests=function(){const box=$('requestsList'); if(!box)return; let list=[]; try{list=getMembers()}catch(e){try{list=JSON.parse(localStorage.getItem('hm_members')||'[]')}catch(_){list=[]}} const q=String(window.adminQuery||$('adminSearch')?.value||'').trim().toLowerCase(); if(q)list=list.filter(m=>[m.name,m.area,m.phone,m.code,m.status].join(' ').toLowerCase().includes(q)); function st(s){try{return statusText(s)}catch(e){return s==='approved'?'مفعل':s==='rejected'?'مرفوض':s==='stopped'?'متوقف':'بانتظار الموافقة'}}; box.innerHTML=list.length?list.map(m=>`<div class="request" data-status="${clean(m.status||'pending')}"><div><h3>${clean(m.name)}</h3><p>المنطقة: ${clean(m.area)}<br>الهاتف: ${clean(m.phone)}</p><div class="linko-admin-code-line">رمز المشترك:<br><b>${clean(m.code)}</b></div><span class="status ${clean(m.status||'pending')}">${st(m.status)}</span></div><div class="req-actions"><button type="button" class="btn mini" onclick="setStatus(${Number(m.id)||0},'approved')">✅ موافقة</button><button type="button" class="btn danger mini" onclick="setStatus(${Number(m.id)||0},'rejected')">❌ رفض</button><button type="button" class="btn dark mini" onclick="setStatus(${Number(m.id)||0},'stopped')">🛑 إيقاف</button></div></div>`).join(''):'<div class="empty">لا توجد طلبات اشتراك حالياً</div>';};
+  window.sendOrderWhatsApp=function(){try{if(!Array.isArray(window.cart)||!cart.length){notify('السلة فارغة');return}const n=$('orderName'),a=$('orderArea'),ph=$('orderPhone');if(!clean(n&&n.value)||!clean(a&&a.value)||!clean(ph&&ph.value)){notify('أكمل الاسم والمنطقة ورقم الهاتف');return}const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';let rest='';try{rest=clean(cart.find(x=>x.restaurantName)?.restaurantName||$('restaurantName')?.value||$('restName')?.value||'')}catch(e){} let extra=''; if(cart.some(x=>x.linkoRestaurantUnified)||String(window.currentBranch?.name||'').includes('المطاعم')){if(!rest){notify('اكتب اسم المطعم المطلوب');return}extra+='\nالمطعم المطلوب: '+rest+'\nتنبيه للزبون: الأفضل الطلب من مطعم واحد حتى لا يتأخر تجهيز ووصول الطلب.'}const butcher=clean($('butcherName')?.value||cart.find(x=>x.butcher)?.butcher||'');if(butcher)extra+='\nالكصاب المطلوب: '+butcher;const lines=cart.map((x,i)=>{let s=(i+1)+'. '+clean(x.name)+'\nالكمية: '+amt(x); if(x.restaurantName)s+='\nالمطعم المطلوب: '+clean(x.restaurantName); if(x.restOption)s+='\nالتفاصيل: '+clean(x.restOption); if(x.pastryOption)s+='\nالنوع/الحشوة: '+clean(x.pastryOption); if(x.brand)s+='\nالماركة/النوع: '+clean(x.brand); if(x.customerNote)s+='\nملاحظة الزبون: '+clean(x.customerNote); if(x.groceryNote)s+='\nملاحظة الزبون: '+clean(x.groceryNote); if(x.pastryNote)s+='\nملاحظة الزبون: '+clean(x.pastryNote); if(x.desc)s+='\nتفاصيل: '+clean(x.desc); return s}).join('\n--------------------\n');const title=clean(window.currentBranch?.name||'هايبر ماركت النخبة');const msg=`طلب جديد - ${title}\n\nالاسم: ${clean(n.value)}\nالمنطقة: ${clean(a.value)}\nالهاتف: ${clean(ph.value)}\nنوع الطلب: ${clean(delivery)}${extra}\n\nالمنتجات:\n${lines}\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;const url='https://wa.me/'+FINAL_WA+'?text='+encodeURIComponent(msg);hardCloseCart();try{cart.length=0;updateCartUI();renderCart()}catch(e){}try{showScreen('homeScreen')}catch(e){}setTimeout(()=>{window.location.href=url},120)}catch(err){console.error(err);notify('صار خطأ بالإرسال، أعد المحاولة')}};
+  function cleanup(){document.querySelectorAll('small').forEach(el=>{const t=el.textContent||''; if(t.includes('رمز الإدارة الحالي')||t.includes('محمية برمز'))el.remove()}); const b=document.querySelector('#cartSheet button[onclick*="sendOrderWhatsApp"],button[onclick="sendOrderWhatsApp()"]'); if(b){b.disabled=false;b.type='button';b.style.pointerEvents='auto';b.style.opacity='1';}}
+  cleanup(); setTimeout(cleanup,300); window.addEventListener('pageshow',()=>{hardCloseCart();cleanup()}); window.addEventListener('focus',()=>{hardCloseCart();cleanup()});
 })();
 </script>
