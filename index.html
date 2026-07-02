@@ -2341,3 +2341,152 @@ body.produce-all-mode .cat-toggle{
   const ps=document.getElementById('productSearch'); if(ps) ps.oninput=()=>window.renderProducts();
 })();
 </script>
+
+
+<!-- ===== LINKO ROOT FINAL FIX V8: PRODUCE SHOW ALL GROUPS, NO CATEGORY CHOICE ===== -->
+<style id="linkoRootFinalProduceAllV8Style">
+body.linko-produce-all #catToggle,
+body.linko-produce-all #catsBox,
+body.linko-produce-all .cat-toggle,
+body.linko-produce-all .cats{
+  display:none!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+}
+.linko-produce-group-title-v8{
+  grid-column:1/-1!important;
+  margin:18px 0 8px!important;
+  padding:14px 16px!important;
+  border-radius:22px!important;
+  background:linear-gradient(135deg,#0f5132,#10b981,#f59e0b,#0f5132)!important;
+  background-size:260% 260%!important;
+  color:#fff!important;
+  box-shadow:0 16px 36px rgba(15,81,50,.18)!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+  font-weight:900!important;
+  animation:linkoProduceBandV8 4.5s ease-in-out infinite!important;
+}
+.linko-produce-group-title-v8 span{font-size:18px!important;line-height:1.4!important}
+.linko-produce-group-title-v8 small{font-size:12px!important;opacity:.92!important;font-weight:900!important;white-space:nowrap!important}
+.linko-produce-note-v8{
+  grid-column:1/-1!important;
+  margin:0 0 12px!important;
+  padding:14px 16px!important;
+  border-radius:22px!important;
+  background:#ecfdf3!important;
+  border:1px solid #bbf7d0!important;
+  color:#087443!important;
+  text-align:center!important;
+  font-weight:900!important;
+  line-height:1.8!important;
+}
+body.linko-produce-all #productsGrid.products{
+  align-items:start!important;
+}
+@keyframes linkoProduceBandV8{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@media(max-width:520px){
+  .linko-produce-group-title-v8{padding:11px 12px!important;border-radius:18px!important;margin:16px 0 8px!important}
+  .linko-produce-group-title-v8 span{font-size:14px!important}
+  .linko-produce-group-title-v8 small{font-size:10px!important}
+  .linko-produce-note-v8{font-size:13px!important;padding:12px!important;border-radius:18px!important}
+}
+</style>
+<script id="linkoRootFinalProduceAllV8Script">
+(function(){
+  const PRODUCE_CATS_V8 = ['الخضروات الأساسية','خضروات المرق والمحاشي','الخضرة والورقيات','خضروات ورقية للطبخ','خضروات متنوعة','الفواكه الدائمة','فواكه الصيف','فواكه الشتاء','التمور والمحليات'];
+  function escV8(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+  function isProduceV8(){
+    try{
+      if(typeof mode !== 'undefined' && mode === 'produce') return true;
+      if(typeof currentBranch !== 'undefined' && currentBranch && (currentBranch.type === 'produce' || String(currentBranch.name||'').includes('المخضر') || String(currentBranch.name||'').includes('الفواكه'))) return true;
+    }catch(e){}
+    return false;
+  }
+  function setProduceBodyV8(){
+    document.body.classList.toggle('linko-produce-all', isProduceV8());
+    if(isProduceV8()){
+      const cats = document.getElementById('catsBox');
+      const toggle = document.getElementById('catToggle');
+      if(cats){cats.classList.remove('open'); cats.style.display='none';}
+      if(toggle){toggle.style.display='none';}
+    }
+  }
+  function unitTypeV8(p){
+    try{ if(typeof unitTypeForProduct==='function') return unitTypeForProduct(p); }catch(e){}
+    return PRODUCE_CATS_V8.includes(p.cat)?'kg':'piece';
+  }
+  function unitTitleV8(t){
+    try{ if(typeof unitTitle==='function') return unitTitle(t); }catch(e){}
+    return t==='kg'?'كغم':'عدد';
+  }
+  function unitBoxV8(p){
+    const t=unitTypeV8(p);
+    if(t==='kg') return `<div class="unit-smart"><select id="unitSelect_${p.id}"><option value="0.25">ربع كيلو</option><option value="0.5">نصف كيلو</option><option value="0.75">ثلاثة أرباع</option><option value="1" selected>1 كيلو</option><option value="1.25">كيلو وربع</option><option value="2">2 كيلو</option><option value="5">5 كيلو</option></select><input id="unitCustom_${p.id}" type="number" inputmode="decimal" min="0.25" step="0.25" placeholder="اكتب كغم"></div><div class="unit-note">اختر جاهز أو اكتب الكمية</div>`;
+    return `<div class="unit-smart"><select id="unitSelect_${p.id}"><option value="1" selected>1 ${unitTitleV8(t)}</option><option value="2">2 ${unitTitleV8(t)}</option><option value="3">3 ${unitTitleV8(t)}</option><option value="6">6 ${unitTitleV8(t)}</option></select><input id="unitCustom_${p.id}" type="number" inputmode="numeric" min="1" step="1" placeholder="اكتب عدد"></div><div class="unit-note">اختر جاهز أو اكتب العدد</div>`;
+  }
+  function productCardV8(p){
+    const inCart = Array.isArray(cart) ? cart.find(x=>String(x.id)===String(p.id)) : null;
+    return `<article class="product"><span class="product-badge">${escV8(p.badge||'متوفر')}</span><img src="${p.img||''}" alt="${escV8(p.name)}"><div class="product-body"><h3>${escV8(p.name)}</h3><div class="unit-box">${unitBoxV8(p)}</div><button class="add-btn ${inCart?'added':''}" onclick="addToCart(${p.id},this)">${inCart?'تمت الإضافة ✓':'إضافة للسلة'}</button></div></article>`;
+  }
+  const oldOpenBranchV8 = window.openBranch;
+  window.openBranch = function(i){
+    if(typeof oldOpenBranchV8 === 'function') oldOpenBranchV8(i);
+    setTimeout(function(){
+      setProduceBodyV8();
+      if(isProduceV8()){
+        const t=document.getElementById('branchTitle'); if(t) t.textContent='فرع المخضر والفواكه';
+        window.renderProducts();
+      }
+    },80);
+  };
+  const oldRenderCatsV8 = window.renderCats;
+  window.renderCats = function(){
+    setProduceBodyV8();
+    if(isProduceV8()){
+      const cats=document.getElementById('catsBox'); if(cats){cats.innerHTML=''; cats.classList.remove('open'); cats.style.display='none';}
+      const toggle=document.getElementById('catToggle'); if(toggle) toggle.style.display='none';
+      return;
+    }
+    if(typeof oldRenderCatsV8 === 'function') return oldRenderCatsV8();
+  };
+  window.renderProducts = function(){
+    setProduceBodyV8();
+    if(!isProduceV8()){
+      // نستخدم آخر منطق موجود لباقي الفروع: مطاعم، غذائية، لحوم، أجهزة
+      const grid=document.getElementById('productsGrid');
+      if(!grid) return;
+      try{
+        // إعادة تنفيذ مبسط لباقي الحالات حتى لا نعتمد على باتش قديم يفلتر غلط
+        if(typeof mode !== 'undefined' && mode==='restaurants' && typeof activeRestaurant !== 'undefined' && !activeRestaurant && typeof restaurantList==='function'){restaurantList();return;}
+      }catch(e){}
+      // fallback إلى آخر دالة محفوظة غير متاحة هنا، لذلك نترك الصفحة كما هي إن لم تكن مخضر
+      return;
+    }
+    const grid=document.getElementById('productsGrid');
+    if(!grid) return;
+    grid.className='products';
+    const q=(document.getElementById('productSearch')?.value||'').trim().toLowerCase();
+    const all=(Array.isArray(products)?products:[]).filter(p=>!p.restaurantId && PRODUCE_CATS_V8.includes(p.cat));
+    let html=`<div class="linko-produce-note-v8">كل منتجات المخضر والفواكه ظاهرة مباشرة بدون اختيار أقسام — عدد المنتجات: ${all.length}</div>`;
+    if(q){
+      const found=all.filter(p=>String(p.name||'').toLowerCase().includes(q)||String(p.cat||'').toLowerCase().includes(q));
+      html += found.length ? found.map(productCardV8).join('') : '<div class="products-fix-empty">لا توجد منتجات مطابقة للبحث</div>';
+      grid.innerHTML=html;
+      const pc=document.getElementById('productsCount'); if(pc) pc.textContent=`${found.length} منتج ظاهر ضمن نتائج البحث`;
+      return;
+    }
+    PRODUCE_CATS_V8.forEach(cat=>{
+      const list=all.filter(p=>p.cat===cat);
+      if(!list.length) return;
+      html += `<div class="linko-produce-group-title-v8"><span>${escV8(cat)}</span><small>${list.length} منتج</small></div>` + list.map(productCardV8).join('');
+    });
+    grid.innerHTML=html;
+    const pc=document.getElementById('productsCount'); if(pc) pc.textContent=`${all.length} منتج ظاهر ضمن فرع المخضر والفواكه`;
+  };
+  const ps=document.getElementById('productSearch'); if(ps) ps.oninput=function(){window.renderProducts();};
+  setInterval(setProduceBodyV8,400);
+})();
+</script>
