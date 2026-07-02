@@ -3677,3 +3677,181 @@ body.linko-restaurant-unified .cats{display:none!important;visibility:hidden!imp
   cleanup(); setTimeout(cleanup,300); window.addEventListener('pageshow',()=>{hardCloseCart();cleanup()}); window.addEventListener('focus',()=>{hardCloseCart();cleanup()});
 })();
 </script>
+
+
+<!-- ===== LINKO ABSOLUTE FINAL CART + WHATSAPP REBUILD V3 ===== -->
+<style id="linkoAbsoluteFinalCartWhatsappV3Style">
+/* إعادة بناء سلوك السلة بالكامل: السلة لا تُغلق عند تعديل الاسم/المنطقة/الهاتف */
+#cartSheet.bottom-sheet.show{
+  position:fixed!important;
+  inset:0!important;
+  z-index:2147483000!important;
+  display:block!important;
+  background:#f6f7f9!important;
+  overflow:hidden!important;
+  pointer-events:auto!important;
+  touch-action:auto!important;
+}
+#cartSheet.bottom-sheet.show .sheet{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100dvh!important;
+  max-height:100dvh!important;
+  min-height:0!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  -webkit-overflow-scrolling:touch!important;
+  touch-action:pan-y!important;
+  overscroll-behavior:contain!important;
+  border-radius:0!important;
+  padding:16px 14px calc(260px + env(safe-area-inset-bottom))!important;
+  background:#f6f7f9!important;
+  box-shadow:none!important;
+}
+#cartSheet.bottom-sheet.show .sheet-head{
+  position:sticky!important;
+  top:0!important;
+  z-index:30!important;
+  margin:-16px -14px 14px!important;
+  padding:14px!important;
+  background:rgba(246,247,249,.98)!important;
+  border-bottom:1px solid rgba(228,231,236,.95)!important;
+}
+#cartSheet input,#cartSheet textarea,#cartSheet select,#cartSheet button,#cartSheet label{
+  pointer-events:auto!important;
+  touch-action:manipulation!important;
+  -webkit-user-select:text!important;
+  user-select:text!important;
+}
+#cartSheet button{user-select:none!important;-webkit-user-select:none!important}
+body.linko-cart-open-final{
+  overflow:hidden!important;
+}
+#cartSheet:not(.show){display:none!important;pointer-events:none!important}
+.linko-wa-ready-btn{
+  background:linear-gradient(135deg,#128c7e,#25d366)!important;
+  color:#fff!important;
+  box-shadow:0 18px 38px rgba(37,211,102,.22)!important;
+}
+@supports not (height:100dvh){#cartSheet.bottom-sheet.show .sheet{height:100vh!important;max-height:100vh!important}}
+</style>
+<script id="linkoAbsoluteFinalCartWhatsappV3Script">
+(function(){
+  'use strict';
+  const FINAL_WA_LOCAL='07887624967';
+  const FINAL_WA_INT='9647887624967';
+  function qs(id){return document.getElementById(id)}
+  function inCartSheet(el){return !!(el && el.closest && el.closest('#cartSheet'))}
+  function cartIsOpen(){return !!qs('cartSheet')?.classList.contains('show')}
+  function moneySafe(n){
+    try{ if(typeof money==='function'){ const m=money(n); if(String(m||'').trim()) return m; } }catch(e){}
+    return Number(n||0).toLocaleString('ar-IQ')+' د.ع';
+  }
+  function amountSafe(x){
+    try{ if(typeof amountText==='function'){ const a=amountText(x); if(String(a||'').trim()) return a; } }catch(e){}
+    const q=Number(x?.qty||1); const t=x?.unitType||x?.unitKind||'piece';
+    if(t==='kg'){
+      if(q===0.25) return 'ربع كيلو'; if(q===0.5) return 'نصف كيلو'; if(q===0.75) return 'ثلاثة أرباع كيلو';
+      return (Number.isInteger(q)?q:q.toLocaleString('ar-IQ'))+' كغم';
+    }
+    if(t==='pack') return q+' عبوة';
+    return q+' عدد';
+  }
+  function toastSafe(msg){try{ if(typeof toast==='function') toast(msg); else alert(msg); }catch(e){alert(msg)}}
+  function renderCartSafe(){try{ if(typeof renderCart==='function') renderCart(); }catch(e){console.warn('renderCart error',e)}}
+  function updateCartSafe(){try{ if(typeof updateCartUI==='function') updateCartUI(); }catch(e){console.warn('updateCartUI error',e)}}
+  function openCartFinal(){
+    const overlay=qs('cartSheet'); if(!overlay) return;
+    const sheet=overlay.querySelector('.sheet');
+    renderCartSafe();
+    overlay.style.display='block'; overlay.style.pointerEvents='auto'; overlay.classList.add('show');
+    document.body.classList.add('linko-cart-open-final');
+    document.body.classList.remove('cart-page-open','force-scroll-unlock');
+    document.documentElement.classList.remove('cart-page-open-html');
+    const btns=[...overlay.querySelectorAll('button')].filter(b=>/واتساب/.test(b.textContent||''));
+    btns.forEach(b=>{b.classList.add('linko-wa-ready-btn'); b.type='button'; b.onclick=null;});
+    requestAnimationFrame(()=>{ if(sheet) sheet.scrollTop=0; });
+  }
+  function closeCartFinal(){
+    const overlay=qs('cartSheet');
+    if(overlay){ overlay.classList.remove('show'); overlay.style.display='none'; overlay.style.pointerEvents='none'; }
+    document.body.classList.remove('linko-cart-open-final','cart-page-open','force-scroll-unlock');
+    document.documentElement.classList.remove('cart-page-open-html');
+  }
+  function buildOrderMessage(){
+    const n=qs('orderName'), a=qs('orderArea'), ph=qs('orderPhone');
+    const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';
+    const branch=(window.currentBranch&&currentBranch.name)?currentBranch.name:'هايبر ماركت النخبة';
+    const list=Array.isArray(window.cart)?cart:[];
+    const lines=list.map((x,i)=>{
+      const bits=[`${i+1}. ${x.name||'منتج'}`,`الكمية: ${amountSafe(x)}`];
+      if(x.brand) bits.push('الماركة/العلامة: '+x.brand);
+      if(x.customerNote) bits.push('ملاحظة الزبون: '+x.customerNote);
+      if(x.choice) bits.push('الاختيار: '+x.choice);
+      if(x.restaurantName) bits.push('اسم المطعم: '+x.restaurantName);
+      else if(x.restaurantId && window.restaurants){ try{ const r=restaurants.find(r=>String(r.id)===String(x.restaurantId)); if(r) bits.push('اسم المطعم: '+r.name); }catch(e){} }
+      const price=Number(x.price||0), qty=Number(x.qty||1);
+      if(price>0){bits.push('سعر المنتج: '+moneySafe(price));bits.push('المجموع: '+moneySafe(price*qty));}
+      return bits.join('\n');
+    }).join('\n--------------------\n');
+    const total=(Array.isArray(window.cart)?cart:[]).reduce((s,x)=>s+(Number(x.price||0)*Number(x.qty||1)),0);
+    let msg=`طلب جديد - ${branch}\n\nالاسم: ${n.value.trim()}\nالمنطقة: ${a.value.trim()}\nالهاتف: ${ph.value.trim()}\nنوع الطلب: ${delivery}\n\nالمنتجات:\n${lines}`;
+    if(total>0) msg += `\n\nالإجمالي: ${moneySafe(total)}`; else msg += `\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;
+    msg += `\n\nرقم استقبال الطلب: ${FINAL_WA_LOCAL}`;
+    return msg;
+  }
+  function sendOrderFinal(ev){
+    if(ev){ev.preventDefault(); ev.stopPropagation(); if(ev.stopImmediatePropagation) ev.stopImmediatePropagation();}
+    const list=Array.isArray(window.cart)?cart:[];
+    if(!list.length){toastSafe('السلة فارغة'); return false;}
+    const n=qs('orderName'), a=qs('orderArea'), ph=qs('orderPhone');
+    if(!n?.value.trim() || !a?.value.trim() || !ph?.value.trim()){
+      toastSafe('أكمل الاسم والمنطقة ورقم الهاتف');
+      const first=[n,a,ph].find(el=>el&&!el.value.trim()); try{first?.focus();}catch(e){}
+      return false;
+    }
+    const url='https://wa.me/'+FINAL_WA_INT+'?text='+encodeURIComponent(buildOrderMessage());
+    // لا نغلق السلة قبل فتح واتساب إلا بعد تجهيز الرابط، حتى يبقى الزر يعمل كحدث مباشر من المستخدم.
+    try{ window.open(url,'_blank','noopener'); }
+    catch(e){ try{ window.location.href=url; }catch(_){ location.assign(url); } }
+    setTimeout(()=>{
+      try{ cart.length=0; }catch(e){ window.cart=[]; }
+      updateCartSafe(); renderCartSafe(); closeCartFinal();
+    },450);
+    return false;
+  }
+  // منع سكربتات قديمة من إغلاق السلة عند لمس أو تعديل حقول السلة.
+  ['focus','focusin','blur','input','change','keydown','keyup','touchstart','touchend','click'].forEach(ev=>{
+    document.addEventListener(ev,function(e){
+      if(inCartSheet(e.target) && (e.target.matches?.('input,textarea,select') || /واتساب/.test(e.target.textContent||''))){
+        e.stopPropagation();
+      }
+    },true);
+  });
+  // الأهم: سكربت قديم يستخدم window focus/pageshow/visibilitychange ويغلق السلة. نوقفه أثناء فتح السلة فقط.
+  ['focus','pageshow','visibilitychange','resize','orientationchange'].forEach(ev=>{
+    window.addEventListener(ev,function(e){
+      if(cartIsOpen()){
+        e.stopPropagation();
+        if(e.stopImmediatePropagation) e.stopImmediatePropagation();
+      }
+    },true);
+  });
+  document.addEventListener('click',function(e){
+    const btn=e.target.closest && e.target.closest('button');
+    if(btn && inCartSheet(btn) && /إرسال الطلب عبر واتساب|واتساب/.test(btn.textContent||'')) sendOrderFinal(e);
+  },true);
+  document.addEventListener('touchend',function(e){
+    const btn=e.target.closest && e.target.closest('button');
+    if(btn && inCartSheet(btn) && /إرسال الطلب عبر واتساب|واتساب/.test(btn.textContent||'')) sendOrderFinal(e);
+  },true);
+  window.openCart=openCartFinal;
+  window.closeCart=closeCartFinal;
+  window.sendOrderWhatsApp=sendOrderFinal;
+  try{ Object.defineProperty(window,'WA',{get(){return FINAL_WA_INT},set(v){}}); }catch(e){ window.WA=FINAL_WA_INT; }
+  setTimeout(()=>{
+    document.querySelectorAll('#cartSheet button').forEach(b=>{ if(/واتساب/.test(b.textContent||'')){ b.type='button'; b.classList.add('linko-wa-ready-btn'); b.onclick=null; }});
+  },300);
+})();
+</script>
