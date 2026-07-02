@@ -2043,6 +2043,184 @@ body.linko-grocery-all .cats{display:none!important;visibility:hidden!important;
 })();
 </script>
 
+
+
+<!-- ===== LINKO ABSOLUTE WHATSAPP BUTTON REBUILD V4 - OUTSIDE CART ===== -->
+<style id="linkoExternalWhatsappButtonStyle">
+/* زر واتساب جديد بالكامل خارج السلة حتى لا يتأثر بأي سكربت قديم داخل #cartSheet */
+#linkoExternalWhatsAppBtn{
+  position:fixed!important;
+  left:18px!important;
+  right:18px!important;
+  bottom:calc(18px + env(safe-area-inset-bottom))!important;
+  z-index:2147483647!important;
+  min-height:64px!important;
+  border-radius:24px!important;
+  border:0!important;
+  background:linear-gradient(135deg,#128c7e,#25d366)!important;
+  color:#fff!important;
+  font-family:Cairo,Inter,sans-serif!important;
+  font-size:21px!important;
+  font-weight:900!important;
+  box-shadow:0 22px 55px rgba(18,140,126,.34)!important;
+  display:none!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:10px!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+  touch-action:manipulation!important;
+  -webkit-tap-highlight-color:transparent!important;
+  user-select:none!important;
+  -webkit-user-select:none!important;
+  cursor:pointer!important;
+}
+body.linko-cart-open-final #linkoExternalWhatsAppBtn,
+body.cart-page-open #linkoExternalWhatsAppBtn{
+  display:flex!important;
+}
+#linkoExternalWhatsAppBtn:active{transform:scale(.985)!important}
+/* نخفي أزرار واتساب القديمة داخل السلة حتى لا يضغط الزبون زر معطل */
+#cartSheet button[onclick*="sendOrderWhatsApp"],
+#cartSheet .cart-form > button.btn.full,
+#cartSheet button.linko-wa-ready-btn{
+  visibility:hidden!important;
+  height:86px!important;
+  pointer-events:none!important;
+}
+@media(max-width:430px){#linkoExternalWhatsAppBtn{min-height:60px!important;font-size:19px!important;left:14px!important;right:14px!important;border-radius:21px!important}}
+</style>
+<script id="linkoExternalWhatsappButtonScript">
+(function(){
+  'use strict';
+  const PHONE='9647887624967';
+  const LOCAL_PHONE='07887624967';
+  function $(id){return document.getElementById(id)}
+  function clean(v){return String(v==null?'':v).replace(/[<>]/g,'').trim()}
+  function notify(msg){try{ if(typeof toast==='function') toast(msg); else alert(msg); }catch(e){alert(msg)}}
+  function amount(x){
+    try{ if(typeof amountText==='function'){ const a=amountText(x); if(clean(a)) return a; } }catch(e){}
+    const q=Number(x&&x.qty||1), t=x&& (x.unitType||x.unitKind) || 'piece';
+    if(t==='kg'){
+      if(q===0.25) return 'ربع كيلو'; if(q===0.5) return 'نصف كيلو'; if(q===0.75) return 'ثلاثة أرباع كيلو';
+      return (Number.isInteger(q)?q:q.toLocaleString('ar-IQ'))+' كغم';
+    }
+    if(t==='pack') return q+' عبوة';
+    return q+' عدد';
+  }
+  function moneySafe(n){try{ if(typeof money==='function'){const m=money(n); if(clean(m)) return m;} }catch(e){} return Number(n||0).toLocaleString('ar-IQ')+' د.ع'}
+  function currentCart(){return Array.isArray(window.cart)?window.cart:[]}
+  function restaurantNameFromPage(){return clean($('restaurantName')?.value || $('restName')?.value || document.querySelector('[data-restaurant-name]')?.value || '')}
+  function buildMsg(){
+    const n=$('orderName'), a=$('orderArea'), ph=$('orderPhone');
+    const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';
+    const branch=clean(window.currentBranch && currentBranch.name ? currentBranch.name : 'هايبر ماركت النخبة');
+    const cart=currentCart();
+    let rest=clean(cart.find(x=>x.restaurantName)?.restaurantName || restaurantNameFromPage());
+    const butcher=clean($('butcherName')?.value || cart.find(x=>x.butcher)?.butcher || '');
+    const lines=cart.map((x,i)=>{
+      const parts=[`${i+1}. ${clean(x.name||'منتج')}`,`الكمية: ${amount(x)}`];
+      if(x.restaurantName) parts.push('المطعم المطلوب: '+clean(x.restaurantName));
+      else if(x.restaurantId && rest) parts.push('المطعم المطلوب: '+rest);
+      if(x.restOption) parts.push('التفاصيل: '+clean(x.restOption));
+      if(x.pastryOption) parts.push('النوع/الحشوة: '+clean(x.pastryOption));
+      if(x.brand) parts.push('الماركة/العلامة: '+clean(x.brand));
+      if(x.choice) parts.push('الاختيار: '+clean(x.choice));
+      if(x.customerNote) parts.push('ملاحظة الزبون: '+clean(x.customerNote));
+      if(x.groceryNote) parts.push('ملاحظة الزبون: '+clean(x.groceryNote));
+      if(x.pastryNote) parts.push('ملاحظة الزبون: '+clean(x.pastryNote));
+      if(x.desc) parts.push('تفاصيل المنتج: '+clean(x.desc));
+      const price=Number(x.price||0), qty=Number(x.qty||1);
+      if(price>0){parts.push('سعر المنتج: '+moneySafe(price));parts.push('المجموع: '+moneySafe(price*qty));}
+      return parts.join('\n');
+    }).join('\n--------------------\n');
+    const total=cart.reduce((s,x)=>s+Number(x.price||0)*Number(x.qty||1),0);
+    let extra='';
+    if(rest) extra += `\nالمطعم المطلوب: ${rest}\nتنبيه: الأفضل الطلب من مطعم واحد حتى لا يتأخر تجهيز ووصول الطلب.`;
+    if(butcher) extra += `\nالكصاب المطلوب: ${butcher}`;
+    let msg=`طلب جديد - ${branch}\n\nالاسم: ${clean(n.value)}\nالمنطقة: ${clean(a.value)}\nالهاتف: ${clean(ph.value)}\nنوع الطلب: ${clean(delivery)}${extra}\n\nالمنتجات:\n${lines}`;
+    if(total>0) msg += `\n\nالإجمالي: ${moneySafe(total)}`; else msg += `\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;
+    msg += `\n\nرقم استقبال الطلب: ${LOCAL_PHONE}`;
+    return msg;
+  }
+  function validate(){
+    if(!currentCart().length){notify('السلة فارغة');return false;}
+    const n=$('orderName'), a=$('orderArea'), ph=$('orderPhone');
+    if(!clean(n&&n.value)){notify('اكتب الاسم'); try{n.focus()}catch(e){} return false;}
+    if(!clean(a&&a.value)){notify('اكتب المنطقة'); try{a.focus()}catch(e){} return false;}
+    if(!clean(ph&&ph.value)){notify('اكتب رقم الهاتف'); try{ph.focus()}catch(e){} return false;}
+    const isRest=(currentCart().some(x=>x.linkoRestaurantUnified||x.restaurantId)||/المطاعم/.test(clean(window.currentBranch&&currentBranch.name)));
+    if(isRest && !clean(currentCart().find(x=>x.restaurantName)?.restaurantName || restaurantNameFromPage())){notify('اكتب اسم المطعم المطلوب');return false;}
+    return true;
+  }
+  function hardCloseAfterSend(){
+    try{const cs=$('cartSheet'); if(cs){cs.classList.remove('show'); cs.style.display='none'; cs.style.pointerEvents='none';}}catch(e){}
+    try{document.body.classList.remove('linko-cart-open-final','cart-page-open','force-scroll-unlock');document.documentElement.classList.remove('cart-page-open-html');}catch(e){}
+  }
+  function sendNow(ev){
+    if(ev){ev.preventDefault(); ev.stopPropagation(); if(ev.stopImmediatePropagation)ev.stopImmediatePropagation();}
+    if(!validate()) return false;
+    const url='https://wa.me/'+PHONE+'?text='+encodeURIComponent(buildMsg());
+    // فتح واتساب مباشرة من ضغطة المستخدم، بدون setTimeout حتى لا يمنعه المتصفح.
+    let opened=null;
+    try{ opened=window.open(url,'_blank'); }catch(e){ opened=null; }
+    if(!opened){ try{ window.location.href=url; }catch(e){ location.assign(url); } }
+    setTimeout(function(){
+      try{ currentCart().length=0; }catch(e){ window.cart=[]; }
+      try{ if(typeof updateCartUI==='function') updateCartUI(); }catch(e){}
+      try{ if(typeof renderCart==='function') renderCart(); }catch(e){}
+      hardCloseAfterSend();
+      try{ if(typeof showScreen==='function') showScreen('homeScreen'); }catch(e){}
+    },700);
+    return false;
+  }
+  function ensureButton(){
+    let b=$('linkoExternalWhatsAppBtn');
+    if(!b){
+      b=document.createElement('button');
+      b.id='linkoExternalWhatsAppBtn';
+      b.type='button';
+      b.textContent='إرسال الطلب عبر واتساب';
+      document.body.appendChild(b);
+    }
+    b.onclick=sendNow;
+    b.ontouchend=sendNow;
+    b.onpointerup=sendNow;
+    return b;
+  }
+  function markCartOpen(){
+    const cs=$('cartSheet');
+    if(cs && cs.classList.contains('show')) document.body.classList.add('linko-cart-open-final');
+    else document.body.classList.remove('linko-cart-open-final');
+  }
+  const oldOpen=window.openCart;
+  window.openCart=function(){
+    try{ if(typeof oldOpen==='function') oldOpen(); }catch(e){}
+    const cs=$('cartSheet'), sheet=cs&&cs.querySelector('.sheet');
+    if(cs){cs.style.display='block';cs.style.pointerEvents='auto';cs.classList.add('show');}
+    document.body.classList.add('linko-cart-open-final');
+    ensureButton();
+    try{ if(typeof renderCart==='function') renderCart(); }catch(e){}
+    setTimeout(()=>{try{ if(sheet) sheet.scrollTop=0; }catch(e){}},20);
+  };
+  const oldClose=window.closeCart;
+  window.closeCart=function(){
+    try{ if(typeof oldClose==='function') oldClose(); }catch(e){}
+    hardCloseAfterSend();
+  };
+  window.sendOrderWhatsApp=sendNow;
+  try{Object.defineProperty(window,'WA',{get(){return PHONE},set(v){}});}catch(e){window.WA=PHONE;}
+  ensureButton();
+  // نربط الزر القديم أيضاً، لكن الاعتماد الأساسي على الزر الخارجي الجديد.
+  setInterval(function(){
+    ensureButton(); markCartOpen();
+    document.querySelectorAll('#cartSheet button').forEach(function(btn){
+      if(/واتساب/.test(btn.textContent||'')){btn.disabled=false;btn.type='button';btn.onclick=sendNow;btn.style.pointerEvents='auto';}
+    });
+  },500);
+})();
+</script>
+
 </body>
 </html>
 
