@@ -4139,3 +4139,126 @@ body.linko-cart-open-final{
   },300);
 })();
 </script>
+
+<!-- ===== LINKO ABSOLUTE FINAL WHATSAPP BUTTON FIX - DO NOT REMOVE ===== -->
+<style id="linkoAbsoluteFinalWhatsAppStyle">
+#linkoFinalWhatsAppBox{margin-top:14px!important;display:grid!important;gap:10px!important}
+#linkoFinalWhatsAppBtn{width:100%!important;min-height:64px!important;border-radius:24px!important;background:linear-gradient(135deg,#128C7E,#25D366)!important;color:#fff!important;font-weight:900!important;font-size:20px!important;border:0!important;box-shadow:0 18px 42px rgba(37,211,102,.28)!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:10px!important;opacity:1!important;pointer-events:auto!important;position:relative!important;z-index:2147483647!important;touch-action:manipulation!important;-webkit-user-select:none!important;user-select:none!important}
+#linkoFinalWhatsAppBtn:active{transform:scale(.985)!important}
+.linko-final-wa-note{font-size:12px!important;color:#087443!important;font-weight:900!important;text-align:center!important;line-height:1.6!important;background:#ecfdf3!important;border:1px solid #bbf7d0!important;border-radius:16px!important;padding:9px!important}
+</style>
+<script id="linkoAbsoluteFinalWhatsAppScript">
+(function(){
+  'use strict';
+  var FINAL_PHONE_INT='9647887624967';
+  var FINAL_PHONE_LOCAL='07887624967';
+  function byId(id){return document.getElementById(id)}
+  function txt(v){return String(v==null?'':v).replace(/[<>]/g,'').trim()}
+  function say(m){try{ if(typeof toast==='function') toast(m); else alert(m); }catch(e){alert(m)}}
+  function getCart(){
+    try{ if(typeof cart!=='undefined' && Array.isArray(cart)) return cart; }catch(e){}
+    try{ if(Array.isArray(window.cart)) return window.cart; }catch(e){}
+    return [];
+  }
+  function amount(it){
+    try{ if(typeof amountText==='function') return amountText(it); }catch(e){}
+    var q=Number(it.qty||1), t=it.unitType||it.unitKind||'piece';
+    if(t==='kg') return (q===0.25?'ربع كيلو':q===0.5?'نصف كيلو':q+' كغم');
+    if(t==='pack') return q+' عبوة';
+    return q+' عدد';
+  }
+  function currentTitle(){
+    try{ if(currentBranch && currentBranch.name) return txt(currentBranch.name); }catch(e){}
+    return 'هايبر ماركت النخبة';
+  }
+  function buildMessage(){
+    var list=getCart();
+    var n=byId('orderName'), a=byId('orderArea'), ph=byId('orderPhone');
+    var name=txt(n&&n.value), area=txt(a&&a.value), phone=txt(ph&&ph.value);
+    if(!list.length){say('السلة فارغة');return null}
+    if(!name || !area || !phone){say('أكمل الاسم والمنطقة ورقم الهاتف');return null}
+    var delivery='توصيل';
+    try{delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل'}catch(e){}
+    var restaurant='';
+    try{restaurant=txt((list.find(function(x){return x.restaurantName})||{}).restaurantName || (byId('restaurantName')||{}).value || (byId('restName')||{}).value || '')}catch(e){}
+    var butcher='';
+    try{butcher=txt((byId('butcherName')||{}).value || (list.find(function(x){return x.butcher})||{}).butcher || '')}catch(e){}
+    var lines=list.map(function(x,i){
+      var s=(i+1)+'. '+txt(x.name)+'\nالكمية: '+amount(x);
+      if(x.restaurantName) s+='\nالمطعم المطلوب: '+txt(x.restaurantName);
+      if(x.restOption) s+='\nالتفاصيل: '+txt(x.restOption);
+      if(x.pastryOption) s+='\nالنوع/الحشوة: '+txt(x.pastryOption);
+      if(x.brand) s+='\nالماركة/النوع: '+txt(x.brand);
+      if(x.customerNote) s+='\nملاحظة الزبون: '+txt(x.customerNote);
+      if(x.groceryNote) s+='\nملاحظة الزبون: '+txt(x.groceryNote);
+      if(x.pastryNote) s+='\nملاحظة الزبون: '+txt(x.pastryNote);
+      if(x.desc) s+='\nتفاصيل المنتج: '+txt(x.desc);
+      return s;
+    }).join('\n--------------------\n');
+    var extra='';
+    if(restaurant) extra+='\nالمطعم المطلوب: '+restaurant+'\nتنبيه: الأفضل الطلب من مطعم واحد حتى لا يتأخر تجهيز ووصول الطلب.';
+    if(butcher) extra+='\nالكصاب المطلوب: '+butcher;
+    return 'طلب جديد - '+currentTitle()+'\n\nالاسم: '+name+'\nالمنطقة: '+area+'\nالهاتف: '+phone+'\nنوع الطلب: '+txt(delivery)+extra+'\n\nالمنتجات:\n'+lines+'\n\nرقم استقبال الطلب: '+FINAL_PHONE_LOCAL+'\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.';
+  }
+  function unlock(){
+    try{document.body.classList.remove('cart-page-open','force-scroll-unlock','linko-cart-open-final');document.documentElement.classList.remove('cart-page-open-html')}catch(e){}
+    try{document.body.style.position='static';document.body.style.overflowY='auto';document.body.style.height='auto';document.documentElement.style.position='static';document.documentElement.style.overflowY='auto';document.documentElement.style.height='auto'}catch(e){}
+  }
+  function openWhatsApp(ev){
+    if(ev){try{ev.preventDefault();ev.stopPropagation();ev.stopImmediatePropagation();}catch(e){}}
+    var msg=buildMessage(); if(!msg) return false;
+    var url='https://wa.me/'+FINAL_PHONE_INT+'?text='+encodeURIComponent(msg);
+    // فتح واتساب مباشرة داخل حدث اللمس/النقر، هذا مهم للآيفون حتى لا يمنع المتصفح النافذة.
+    try{ window.location.assign(url); }catch(e){ try{ window.location.href=url; }catch(_){ window.open(url,'_self'); } }
+    setTimeout(function(){
+      try{ var list=getCart(); if(Array.isArray(list)) list.length=0; }catch(e){}
+      try{ if(typeof updateCartUI==='function') updateCartUI(); }catch(e){}
+      try{ if(typeof renderCart==='function') renderCart(); }catch(e){}
+      try{ var cs=byId('cartSheet'); if(cs) cs.classList.remove('show'); }catch(e){}
+      unlock();
+    },700);
+    return false;
+  }
+  function installButton(){
+    var form=document.querySelector('#cartSheet .cart-form'); if(!form) return;
+    // عطّل كل أزرار واتساب القديمة حتى لا تتداخل ويصير الزر يقرأ دالة قديمة.
+    Array.prototype.forEach.call(form.querySelectorAll('button'),function(b){
+      if(/واتساب|إرسال الطلب/.test(b.textContent||'')){
+        if(b.id!=='linkoFinalWhatsAppBtn') b.style.display='none';
+        b.disabled=false; b.type='button'; b.removeAttribute('onclick');
+      }
+    });
+    var box=byId('linkoFinalWhatsAppBox');
+    if(!box){
+      box=document.createElement('div'); box.id='linkoFinalWhatsAppBox';
+      box.innerHTML='<div class="linko-final-wa-note">زر الإرسال النهائي مفعّل ويرسل الطلب مباشرة إلى '+FINAL_PHONE_LOCAL+'</div><button id="linkoFinalWhatsAppBtn" type="button">📲 إرسال الطلب عبر واتساب</button>';
+      form.appendChild(box);
+    }
+    var btn=byId('linkoFinalWhatsAppBtn'); if(!btn) return;
+    btn.disabled=false; btn.onclick=openWhatsApp;
+    ['click','touchend','pointerup'].forEach(function(ev){
+      btn.removeEventListener(ev,openWhatsApp,true);
+      btn.addEventListener(ev,openWhatsApp,{capture:true,passive:false});
+    });
+  }
+  var oldOpen=window.openCart;
+  window.openCart=function(){
+    try{ if(typeof oldOpen==='function') oldOpen(); }catch(e){}
+    try{ var cs=byId('cartSheet'); if(cs){cs.style.display='block';cs.style.pointerEvents='auto';cs.classList.add('show');} }catch(e){}
+    try{ if(typeof renderCart==='function') renderCart(); }catch(e){}
+    setTimeout(installButton,20);
+    setTimeout(installButton,250);
+  };
+  window.sendOrderWhatsApp=openWhatsApp;
+  // اعتراض أي نقر على أي زر مكتوب عليه واتساب داخل السلة، حتى لو الزر القديم بقى ظاهر.
+  ['click','touchend','pointerup'].forEach(function(ev){
+    document.addEventListener(ev,function(e){
+      var b=e.target&&e.target.closest&&e.target.closest('button');
+      if(b && b.closest('#cartSheet') && /واتساب|إرسال الطلب/.test(b.textContent||'')) openWhatsApp(e);
+    },{capture:true,passive:false});
+  });
+  document.addEventListener('DOMContentLoaded',installButton);
+  setInterval(function(){ if(document.getElementById('cartSheet')?.classList.contains('show')) installButton(); },700);
+  installButton();
+})();
+</script>
