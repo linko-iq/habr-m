@@ -2922,3 +2922,130 @@ body.linko-all-products .cats{display:none!important;visibility:hidden!important
   if(typeof renderBranches==='function')renderBranches();
 })();
 </script>
+
+
+<!-- ===== LINKO GROCERY ROOT FIX V3: FULL IRAQI GROCERY PRODUCTS + BRAND/NOTES, NO CATEGORIES ===== -->
+<style id="linkoGroceryRootFixV3Style">
+body.linko-grocery-all #catToggle,
+body.linko-grocery-all #catsBox,
+body.linko-grocery-all .cat-toggle,
+body.linko-grocery-all .cats{display:none!important;visibility:hidden!important;pointer-events:none!important}
+.linko-grocery-note{grid-column:1/-1!important;margin:0 0 12px!important;padding:14px 16px!important;border-radius:22px!important;background:#fff7ed!important;border:1px solid #fed7aa!important;color:#9a3412!important;text-align:center!important;font-weight:900!important;line-height:1.8!important}
+.linko-group-band.grocery{grid-column:1/-1!important;margin:14px 0 10px!important;border-radius:22px!important;padding:13px 16px!important;color:#fff!important;background:linear-gradient(135deg,#78350f,#f59e0b,#0f5132,#78350f)!important;background-size:260% 260%!important;animation:linkoBandMove 4.5s ease-in-out infinite!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;box-shadow:0 16px 34px rgba(120,53,15,.18)!important;font-weight:900!important}.linko-group-band.grocery span{font-size:18px!important}.linko-group-band.grocery small{font-size:12px!important;opacity:.92!important}
+.grocery-brand-box{display:grid!important;gap:6px!important;margin:6px 0!important}.grocery-brand-box select,.grocery-brand-box input{width:100%!important;min-height:33px!important;border-radius:11px!important;border:1px solid var(--line)!important;background:#f8fafc!important;color:#111827!important;font-weight:900!important;font-size:10.5px!important;padding:4px 8px!important}.grocery-brand-box input{background:#fff!important}.grocery-mini-label{font-size:9.5px!important;color:#667085!important;font-weight:900!important;line-height:1.4!important}.product.grocery-product .product-badge{background:linear-gradient(135deg,#f59e0b,#fde68a)!important;color:#111827!important}
+@media(max-width:520px){.linko-grocery-note{font-size:13px!important;padding:12px!important;border-radius:18px!important}.linko-group-band.grocery{padding:11px 12px!important;border-radius:18px!important}.linko-group-band.grocery span{font-size:15px!important}.grocery-brand-box select,.grocery-brand-box input{min-height:30px!important;font-size:9.5px!important}}
+</style>
+<script id="linkoGroceryRootFixV3Script">
+(function(){
+  const IMG_FALL='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22220%22 viewBox=%220 0 300 220%22%3E%3Crect width=%22300%22 height=%22220%22 rx=%2228%22 fill=%22%23f3f4f6%22/%3E%3Ctext x=%22150%22 y=%22125%22 text-anchor=%22middle%22 font-size=%2254%22%3E🛒%3C/text%3E%3C/svg%3E';
+  function svgImg(title,emoji,c1,c2){return 'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520"><defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs><rect width="800" height="520" rx="58" fill="url(#g)"/><circle cx="120" cy="110" r="86" fill="rgba(255,255,255,.12)"/><circle cx="670" cy="390" r="130" fill="rgba(255,255,255,.10)"/><text x="400" y="205" text-anchor="middle" font-size="92">${emoji}</text><text x="400" y="326" text-anchor="middle" font-family="Arial" font-size="42" font-weight="900" fill="white">${title}</text></svg>`)}
+  function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+  const GROCERY_FULL_CATS=['المواد الجافة والمؤونة','معلبات ومحسنات الطبخ','الألبان والأجبان','مواد الفطور والسكريات','التوابل والبهارات'];
+  const brandMap={
+    rice:['اختيار الماركة','عنبر عراقي','بسمتي هندي','محمود','التونسا','ماركة أخرى'],
+    flour:['اختيار النوع','طحين الصفر','طحين السيال','ماركة أخرى'],
+    oil:['اختيار النوع/الماركة','زيت عباد الشمس','زيت الذرة','دهن جنه','دهن حر','ماركة أخرى'],
+    tomato:['اختيار الماركة','التونسا','فايف بيلز','الخير','ماركة أخرى'],
+    dairy:['اختيار الماركة','ألبان أربيل','كاله','المرجان','محلي','ماركة أخرى'],
+    tea:['اختيار الماركة','شاي أحمد','شاي الوزير','شاي الهيل','ماركة أخرى'],
+    jam:['اختيار النوع','تين','مشمش','سفرجل','ماركة أخرى'],
+    spice:['اختيار النوع','عراقي','هندي','مطحون','صحيح','ماركة أخرى'],
+    general:['اختيار الماركة/العلامة','محلي','مستورد','ماركة معروفة','أي نوع متوفر','ماركة أخرى']
+  };
+  function brands(key){return brandMap[key||'general']||brandMap.general}
+  const groceryData=[
+    // المواد الجافة والمؤونة
+    ['تمن العنبر العراقي','المواد الجافة والمؤونة','ذو الرائحة المميزة للطبخ العراقي','🍚','rice','kg'],
+    ['تمن بسمتي هندي','المواد الجافة والمؤونة','رز بسمتي هندي طويل الحبة','🍚','rice','kg'],
+    ['تمن الحصة محمود','المواد الجافة والمؤونة','تمن الحصة نوع محمود','🍚','rice','kg'],
+    ['تمن التونسا','المواد الجافة والمؤونة','تمن الحصة نوع التونسا','🍚','rice','kg'],
+    ['طحين الصفر','المواد الجافة والمؤونة','للمخبوزات والكليجة','🌾','flour','kg'],
+    ['طحين السيال العادي','المواد الجافة والمؤونة','للخبز والاستخدام اليومي','🌾','flour','kg'],
+    ['فاصوليا يابسة','المواد الجافة والمؤونة','من البقوليات الأساسية للمؤونة','🥣','general','kg'],
+    ['حمص','المواد الجافة والمؤونة','حب حمص للمطبخ العراقي','🥣','general','kg'],
+    ['عدس أحمر','المواد الجافة والمؤونة','لشوربة رمضان والطبخ اليومي','🥣','general','kg'],
+    ['ماش','المواد الجافة والمؤونة','بقوليات للطبخ والمؤونة','🥣','general','kg'],
+    ['باجلا يابسة','المواد الجافة والمؤونة','باقلاء يابسة للطبخ العراقي','🥣','general','kg'],
+    ['شعرية','المواد الجافة والمؤونة','تستخدم مع التمن والبرياني','🍜','general','piece'],
+    ['معكرونة','المواد الجافة والمؤونة','معكرونة للطبخ اليومي','🍝','general','piece'],
+    ['سباغيتي','المواد الجافة والمؤونة','سباغيتي للعائلة','🍝','general','piece'],
+    ['برغل','المواد الجافة والمؤونة','أساسي للكبة الموصلية وكبة السراي','🌾','general','kg'],
+    ['جريش','المواد الجافة والمؤونة','للأكلات العراقية الشعبية','🌾','general','kg'],
+    // معلبات ومحسنات الطبخ
+    ['معجون الطماطة','معلبات ومحسنات الطبخ','صلصة أساسية للمراقي والتمن الأحمر','🥫','tomato','piece'],
+    ['زيت عباد الشمس','معلبات ومحسنات الطبخ','زيت للقلي والطبخ اليومي','🛢️','oil','piece'],
+    ['زيت الذرة','معلبات ومحسنات الطبخ','زيت طبخ وقلي','🛢️','oil','piece'],
+    ['دهن جنه','معلبات ومحسنات الطبخ','للنكهة والطبخ الأصيل','🧈','oil','piece'],
+    ['دهن حر','معلبات ومحسنات الطبخ','دهن حر للطبخ العراقي الأصيل','🧈','oil','piece'],
+    ['عمبة عراقية','معلبات ومحسنات الطبخ','مقبلات جاهزة مع الوجبات','🥭','general','piece'],
+    ['طرشي نجفي','معلبات ومحسنات الطبخ','طرشي عراقي نجفي','🥒','general','piece'],
+    ['طرشي موصلي','معلبات ومحسنات الطبخ','طرشي عراقي موصلي','🥒','general','piece'],
+    ['راشي / طحينية','معلبات ومحسنات الطبخ','راشي أو طحينية حسب الطلب','🥄','general','piece'],
+    // الألبان والأجبان
+    ['جبن عرب مالح','الألبان والأجبان','جبن عربي مالح للفطور والمائدة','🧀','dairy','piece'],
+    ['جبن كرافت','الألبان والأجبان','جبن كرافت حسب المتوفر','🧀','dairy','piece'],
+    ['جبن مثلثات','الألبان والأجبان','جبن مثلثات للفطور والسندويشات','🧀','dairy','piece'],
+    ['جبن موزاريلا','الألبان والأجبان','للبيتزا والمأكولات','🧀','dairy','piece'],
+    ['جبن قشقوان','الألبان والأجبان','جبن قشقوان حسب الطلب','🧀','dairy','piece'],
+    ['قيمر العرب','الألبان والأجبان','للفطور مع العسل والدبس','🥛','dairy','piece'],
+    ['قيمر السدة','الألبان والأجبان','قيمر سدة للفطور العراقي','🥛','dairy','piece'],
+    ['لبن شنينة','الألبان والأجبان','لبن رائب مخفف بالماء والنعناع','🥛','dairy','piece'],
+    ['روبة / زبادي عائلي','الألبان والأجبان','عبوات عائلية مثل أربيل وكاله والمرجان','🥛','dairy','piece'],
+    ['زبد عربي','الألبان والأجبان','زبد عربي حسب المتوفر','🧈','dairy','piece'],
+    ['زبد صناعي','الألبان والأجبان','زبد صناعي للطبخ والفطور','🧈','dairy','piece'],
+    ['قمصلة عربية / صناعية','الألبان والأجبان','قمصلة حسب النوع المطلوب','🧈','dairy','piece'],
+    // الفطور والسكريات
+    ['دبس التمر','مواد الفطور والسكريات','بديل السكر الطبيعي في البيوت العراقية','🍯','general','piece'],
+    ['شاي أحمد','مواد الفطور والسكريات','شاي أحمد حسب الحجم المطلوب','☕','tea','piece'],
+    ['شاي الوزير','مواد الفطور والسكريات','شاي الوزير حسب الحجم المطلوب','☕','tea','piece'],
+    ['شاي الهيل','مواد الفطور والسكريات','شاي بنكهة الهيل','☕','tea','piece'],
+    ['سكر / شكر','مواد الفطور والسكريات','سكر للبيت والاستخدام اليومي','🧂','general','kg'],
+    ['مربى التين','مواد الفطور والسكريات','مربى فطور بنكهة التين','🍓','jam','piece'],
+    ['مربى المشمش','مواد الفطور والسكريات','مربى فطور بنكهة المشمش','🍑','jam','piece'],
+    ['مربى السفرجل','مواد الفطور والسكريات','مربى السفرجل المحلي الشهير','🍯','jam','piece'],
+    ['نوتيلا','مواد الفطور والسكريات','شكولاتة قابلة للدهن','🍫','general','piece'],
+    ['شكولاتة قابلة للدهن','مواد الفطور والسكريات','بديل نوتيلا أو أي ماركة مطلوبة','🍫','general','piece'],
+    // التوابل والبهارات
+    ['البهارات السبعة / السبع بهار','التوابل والبهارات','خلطة بهارات أساسية للطبخ','🌿','spice','kg'],
+    ['خلطة بهارات عراقية للدولمة','التوابل والبهارات','خلطة خاصة للدولمة العراقية','🌿','spice','kg'],
+    ['خلطة بهارات للبرغل','التوابل والبهارات','للكبة والبرغل والأكلات الشعبية','🌿','spice','kg'],
+    ['خلطة بهارات اللحوم','التوابل والبهارات','للكباب واللحم والطبخ','🌿','spice','kg'],
+    ['نومي بصرة صحيح','التوابل والبهارات','ليمون مجفف صحيح للباميا والتشريب','🍋','spice','kg'],
+    ['نومي بصرة مطحون','التوابل والبهارات','نومي بصرة مطحون للمرق والشاي','🍋','spice','kg'],
+    ['كاري','التوابل والبهارات','كاري للطبخ والخلطات','🌿','spice','kg'],
+    ['كركم','التوابل والبهارات','كركم مطحون للطبخ','🌿','spice','kg'],
+    ['هيل مطحون','التوابل والبهارات','للكليجة والشاي','🟢','spice','kg'],
+    ['هيل صحيح','التوابل والبهارات','هيل حب للشاي والكليجة','🟢','spice','kg'],
+    ['ملح طعام','التوابل والبهارات','ملح للاستخدام اليومي','🧂','spice','kg'],
+    ['ملح خشن للكبس','التوابل والبهارات','للكبس والطرشي','🧂','spice','kg']
+  ];
+  function rebuildGroceryProducts(){
+    const oldCats=['المواد الغذائية','المشروبات','المواد الجافة والمؤونة','معلبات ومحسنات الطبخ','الألبان والأجبان','مواد الفطور والسكريات','التوابل والبهارات'];
+    for(let i=products.length-1;i>=0;i--){const p=products[i]; if(!p.restaurantId && (p.linkoGroceryFull || oldCats.includes(p.cat))) products.splice(i,1);}
+    groceryData.forEach((g,idx)=>products.push({id:880000+idx,name:g[0],cat:g[1],desc:g[2],img:svgImg(g[0],g[3],'#78350f','#f59e0b'),badge:'متوفر',price:0,stock:99,unitKind:g[5],brands:brands(g[4]),linkoGroceryFull:true}));
+  }
+  rebuildGroceryProducts();
+  function isGroceryBranch(){return !!(currentBranch && /غذائية|الغذائية|مواد غذائية|فرع الغذائية/.test(String(currentBranch.name||'')));}
+  function setGroceryBody(){document.body.classList.toggle('linko-grocery-all',isGroceryBranch()); if(isGroceryBranch()){const c=document.getElementById('catsBox'),t=document.getElementById('catToggle'); if(c){c.innerHTML='';c.classList.remove('open');c.style.display='none'} if(t)t.style.display='none';}}
+  function unitKind(p){return p.unitKind||(p.cat==='المواد الجافة والمؤونة'||p.cat==='التوابل والبهارات'?'kg':'piece')}
+  function getAmount(id){const c=document.getElementById('unitCustom_'+id),v=Number(c?.value||0);if(v>0)return v;return Number(document.getElementById('unitSelect_'+id)?.value||1)}
+  window.getSelectedAmount=window.getSelectedAmount||getAmount;
+  function unitOptions(p){const t=unitKind(p); if(t==='kg')return `<div class="unit-smart"><select id="unitSelect_${p.id}"><option value="0.25">ربع كيلو</option><option value="0.5">نصف كيلو</option><option value="1" selected>1 كيلو</option><option value="2">2 كيلو</option><option value="5">5 كيلو</option><option value="10">10 كيلو</option></select><input id="unitCustom_${p.id}" type="number" inputmode="decimal" min="0.25" step="0.25" placeholder="اكتب كغم"></div><div class="unit-note">اختر جاهز أو اكتب الكمية</div>`; return `<div class="unit-smart"><select id="unitSelect_${p.id}"><option value="1" selected>1 عدد</option><option value="2">2 عدد</option><option value="3">3 عدد</option><option value="6">6 عدد</option><option value="12">12 عدد</option></select><input id="unitCustom_${p.id}" type="number" inputmode="numeric" min="1" step="1" placeholder="اكتب عدد"></div><div class="unit-note">اختر جاهز أو اكتب العدد</div>`;}
+  function brandBox(p){return `<div class="grocery-brand-box"><select id="brandSelect_${p.id}">${(p.brands||brandMap.general).map(b=>`<option value="${esc(b)}">${esc(b)}</option>`).join('')}</select><input id="groceryNote_${p.id}" placeholder="اكتب الماركة أو المواصفات المطلوبة"><div class="grocery-mini-label">مثال: أريد محمود فقط، حجم 5 كغم، أو أي ماركة بديلة</div></div>`}
+  function card(p){const inCart=Array.isArray(cart)?cart.find(x=>String(x.id)===String(p.id)):null;return `<article class="product grocery-product"><span class="product-badge">${esc(p.badge||'متوفر')}</span><img src="${p.img||IMG_FALL}" alt="${esc(p.name)}" onerror="this.src='${IMG_FALL}'"><div class="product-body"><h3>${esc(p.name)}</h3>${p.desc?`<div class="unit-note">${esc(p.desc)}</div>`:''}<div class="unit-box">${unitOptions(p)}</div>${brandBox(p)}<button class="add-btn ${inCart?'added':''}" onclick="addToCart(${p.id},this)">${inCart?'تمت الإضافة ✓':'إضافة للسلة'}</button></div></article>`}
+  function renderGrocery(){setGroceryBody();const grid=document.getElementById('productsGrid');if(!grid)return;grid.className='products';const q=(document.getElementById('productSearch')?.value||'').trim().toLowerCase();const all=products.filter(p=>p.linkoGroceryFull);let html=`<div class="linko-grocery-note">تمت إضافة منتجات الغذائية كاملة بالتفصيل — عدد المنتجات: ${all.length}<br>اختر الكمية، وحدد الماركة أو اكتب المواصفات المطلوبة لكل منتج.</div>`; if(q){const found=all.filter(p=>String(p.name||'').toLowerCase().includes(q)||String(p.cat||'').toLowerCase().includes(q)||String(p.desc||'').toLowerCase().includes(q)); grid.innerHTML=html+(found.length?found.map(card).join(''):'<div class="products-fix-empty">لا توجد منتجات مطابقة للبحث</div>'); return;} GROCERY_FULL_CATS.forEach(cat=>{const list=all.filter(p=>p.cat===cat); if(list.length) html+=`<div class="linko-group-band grocery"><span>${esc(cat)}</span><small>${list.length} منتج</small></div>`+list.map(card).join('');}); grid.innerHTML=html;}
+  const oldOpenBranch=window.openBranch;
+  window.openBranch=function(i){ if(typeof oldOpenBranch==='function') oldOpenBranch(i); setTimeout(()=>{setGroceryBody(); if(isGroceryBranch()){if(branchTitle)branchTitle.textContent='فرع الغذائية'; renderGrocery();}},90); };
+  const oldRenderCats=window.renderCats;
+  window.renderCats=function(){setGroceryBody(); if(isGroceryBranch())return; if(typeof oldRenderCats==='function')oldRenderCats();};
+  const oldRenderProducts=window.renderProducts;
+  window.renderProducts=function(){setGroceryBody(); if(isGroceryBranch()){renderGrocery();return;} if(typeof oldRenderProducts==='function')oldRenderProducts();};
+  const oldAddToCart=window.addToCart;
+  window.addToCart=function(id,btn){const p=products.find(x=>String(x.id)===String(id)); if(p&&p.linkoGroceryFull){const amount=Math.max(0,Number(getAmount(id)||1));if(!amount){if(typeof toast==='function')toast('اكتب كمية صحيحة');return}const brand=document.getElementById('brandSelect_'+id)?.value||'';const note=document.getElementById('groceryNote_'+id)?.value||'';let details=[]; if(brand && brand!=='اختيار الماركة' && brand!=='اختيار الماركة/العلامة' && brand!=='اختيار النوع/الماركة' && brand!=='اختيار النوع')details.push('الماركة/النوع: '+brand); if(note)details.push('طلب الزبون: '+note); let item=cart.find(x=>String(x.id)===String(id)&&x.brand===brand&&x.groceryNote===note); if(item)item.qty=Number((Number(item.qty||0)+amount).toFixed(2)); else cart.push({...p,qty:amount,unitType:unitKind(p),price:0,brand,groceryNote:note,desc:[p.desc, ...details].filter(Boolean).join(' | ')}); if(btn){btn.classList.add('added','bump');btn.textContent='تمت الإضافة ✓';setTimeout(()=>btn.classList.remove('bump'),300)} updateCartUI(); return;} if(typeof oldAddToCart==='function')oldAddToCart(id,btn); };
+  const oldSend=window.sendOrderWhatsApp;
+  window.sendOrderWhatsApp=function(){ if(!cart.some(x=>x.linkoGroceryFull)){ if(typeof oldSend==='function')return oldSend(); }
+    if(!cart.length){toast('السلة فارغة');return}const n=document.getElementById('orderName'),a=document.getElementById('orderArea'),ph=document.getElementById('orderPhone');if(!n?.value||!a?.value||!ph?.value){toast('أكمل الاسم والمنطقة ورقم الهاتف');return}const delivery=document.querySelector('input[name="deliveryType"]:checked')?.value||'توصيل';const butcher=document.getElementById('butcherName')?.value||cart.find(x=>x.butcher)?.butcher||'';const lines=cart.map((x,i)=>`${i+1}. ${x.name}\nالكمية: ${typeof amountText==='function'?amountText(x):(x.qty+' عدد')}${x.restaurantId?'\nالمطعم: '+String(x.cat||'').replace(/^وجبات |^مشروبات /,''):''}${x.brand?'\nالماركة/النوع: '+x.brand:''}${x.groceryNote?'\nملاحظة الزبون: '+x.groceryNote:''}${x.desc?'\nتفاصيل: '+x.desc:''}`).join('\n--------------------\n');const msg=`طلب جديد - ${currentBranch?.name||'هايبر ماركت النخبة'}\n\nالاسم: ${n.value}\nالمنطقة: ${a.value}\nالهاتف: ${ph.value}\nنوع الطلب: ${delivery}${butcher?'\nالكصاب المطلوب: '+butcher:''}\n\nالمنتجات:\n${lines}\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.`;try{cartSheet.classList.remove('show');document.body.classList.remove('cart-page-open');document.documentElement.classList.remove('cart-page-open-html')}catch(e){}cart=[];updateCartUI();if(typeof renderCart==='function')renderCart();showScreen('homeScreen');setTimeout(()=>{window.open(`https://wa.me/${WA||'9647747248826'}?text=${encodeURIComponent(msg)}`,'_blank')},120); };
+  const ps=document.getElementById('productSearch'); if(ps)ps.oninput=()=>renderProducts();
+  setInterval(setGroceryBody,400);
+})();
+</script>
