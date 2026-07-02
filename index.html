@@ -2221,6 +2221,112 @@ body.cart-page-open #linkoExternalWhatsAppBtn{
 })();
 </script>
 
+
+
+<!-- ===== LINKO ABSOLUTE WHATSAPP BUTTON FIX - USE REAL CART VARIABLE ===== -->
+<style id="linkoAbsoluteWhatsAppFixStyle">
+#cartSheet button.linko-absolute-wa,
+#cartSheet .linko-absolute-wa{
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  width:100%!important;min-height:64px!important;border-radius:22px!important;
+  background:linear-gradient(135deg,#15803d,#10b981)!important;color:#fff!important;
+  font-weight:900!important;font-size:20px!important;opacity:1!important;filter:none!important;
+  pointer-events:auto!important;touch-action:manipulation!important;position:relative!important;z-index:999999!important;
+  box-shadow:0 18px 45px rgba(16,185,129,.28)!important;border:0!important;
+}
+#cartSheet button.linko-absolute-wa:active{transform:scale(.985)!important}
+</style>
+<script id="linkoAbsoluteWhatsAppFixScript">
+(function(){
+  'use strict';
+  const PHONE_INT='9647887624967';
+  const PHONE_LOCAL='07887624967';
+  function $(id){return document.getElementById(id)}
+  function t(v){return String(v==null?'':v).replace(/[<>`]/g,'').trim()}
+  function notify(m){try{ if(typeof toast==='function') toast(m); else alert(m); }catch(e){ alert(m); }}
+  function getCart(){try{return (typeof cart!=='undefined' && Array.isArray(cart)) ? cart : [];}catch(e){return []}}
+  function money2(n){try{ if(typeof money==='function') return money(n); }catch(e){} return Number(n||0).toLocaleString('ar-IQ')+' د.ع';}
+  function amount2(x){try{ if(typeof amountText==='function') return amountText(x); }catch(e){} const q=Number(x.qty||1); return (Number.isInteger(q)?q:q.toLocaleString('ar-IQ'))+' عدد';}
+  function selectedDelivery(){return document.querySelector('input[name="deliveryType"]:checked')?.value || 'توصيل'}
+  function extraLine(x){
+    let s='';
+    if(x.restaurantName) s+='\nالمطعم المطلوب: '+t(x.restaurantName);
+    if(x.butcher) s+='\nالكصاب المطلوب: '+t(x.butcher);
+    if(x.restOption) s+='\nالتفاصيل: '+t(x.restOption);
+    if(x.pastryOption) s+='\nالنوع/الحشوة: '+t(x.pastryOption);
+    if(x.brand) s+='\nالماركة/النوع: '+t(x.brand);
+    if(x.customerNote) s+='\nملاحظة الزبون: '+t(x.customerNote);
+    if(x.groceryNote) s+='\nملاحظة الزبون: '+t(x.groceryNote);
+    if(x.pastryNote) s+='\nملاحظة الزبون: '+t(x.pastryNote);
+    if(x.desc) s+='\nتفاصيل: '+t(x.desc);
+    return s;
+  }
+  function buildMsg(){
+    const list=getCart();
+    const n=$('orderName'), a=$('orderArea'), ph=$('orderPhone');
+    const branch=t((typeof currentBranch!=='undefined' && currentBranch && currentBranch.name) ? currentBranch.name : 'هايبر ماركت النخبة');
+    const lines=list.map((x,i)=>`${i+1}. ${t(x.name)}\nالكمية: ${amount2(x)}${extraLine(x)}`).join('\n--------------------\n');
+    let msg=`طلب جديد - ${branch}\n\nالاسم: ${t(n&&n.value)}\nالمنطقة: ${t(a&&a.value)}\nالهاتف: ${t(ph&&ph.value)}\nنوع الطلب: ${t(selectedDelivery())}`;
+    let rname=''; try{rname=t(list.find(x=>x.restaurantName)?.restaurantName || $('restaurantName')?.value || $('restName')?.value || '')}catch(e){}
+    if(rname) msg+=`\nالمطعم المطلوب: ${rname}\nتنبيه للزبون: الأفضل الطلب من مطعم واحد حتى لا يتأخر تجهيز ووصول الطلب.`;
+    let butcher=''; try{butcher=t($('butcherName')?.value || list.find(x=>x.butcher)?.butcher || '')}catch(e){}
+    if(butcher) msg+=`\nالكصاب المطلوب: ${butcher}`;
+    msg+=`\n\nالمنتجات:\n${lines}`;
+    const total=list.reduce((s,x)=>s+(Number(x.price||0)*Number(x.qty||1)),0);
+    if(total>0) msg+=`\n\nالإجمالي: ${money2(total)}`; else msg+='\n\nملاحظة: الأسعار غير مضافة حالياً وسيتم تأكيد الطلب من الإدارة.';
+    msg+=`\n\nرقم استقبال الطلب: ${PHONE_LOCAL}`;
+    return msg;
+  }
+  function sendNow(ev){
+    if(ev){try{ev.preventDefault();ev.stopPropagation();ev.stopImmediatePropagation&&ev.stopImmediatePropagation();}catch(e){}}
+    const list=getCart();
+    if(!list.length){notify('السلة فارغة'); return false;}
+    const n=$('orderName'), a=$('orderArea'), ph=$('orderPhone');
+    if(!t(n&&n.value) || !t(a&&a.value) || !t(ph&&ph.value)){
+      notify('أكمل الاسم والمنطقة ورقم الهاتف');
+      const f=[n,a,ph].find(el=>el && !t(el.value)); try{f&&f.focus();}catch(e){}
+      return false;
+    }
+    const url='https://wa.me/'+PHONE_INT+'?text='+encodeURIComponent(buildMsg());
+    // أهم نقطة: الانتقال يتم مباشرة بنفس حدث الضغط، لذلك يعمل على iPhone وAndroid.
+    try{ window.location.assign(url); }catch(e){ window.location.href=url; }
+    setTimeout(function(){
+      try{ if(typeof cart!=='undefined' && Array.isArray(cart)) cart.length=0; }catch(e){}
+      try{ if(typeof updateCartUI==='function') updateCartUI(); }catch(e){}
+    },900);
+    return false;
+  }
+  window.LINKO_SEND_WA_NOW=sendNow;
+  window.sendOrderWhatsApp=sendNow;
+  function installButton(){
+    const sheet=$('cartSheet'); if(!sheet) return;
+    const buttons=[...sheet.querySelectorAll('button')].filter(b=>/واتساب|إرسال الطلب/.test(b.textContent||''));
+    buttons.forEach(b=>{
+      b.disabled=false; b.type='button'; b.classList.add('linko-absolute-wa');
+      b.setAttribute('onclick','return LINKO_SEND_WA_NOW(event)');
+      b.setAttribute('ontouchend','return LINKO_SEND_WA_NOW(event)');
+      b.style.pointerEvents='auto'; b.style.opacity='1';
+    });
+    if(!buttons.length){
+      const form=sheet.querySelector('.cart-form') || sheet.querySelector('.sheet') || sheet;
+      const btn=document.createElement('button');
+      btn.type='button'; btn.className='linko-absolute-wa'; btn.textContent='إرسال الطلب عبر واتساب';
+      btn.setAttribute('onclick','return LINKO_SEND_WA_NOW(event)');
+      btn.setAttribute('ontouchend','return LINKO_SEND_WA_NOW(event)');
+      form.appendChild(btn);
+    }
+  }
+  const oldOpen=window.openCart;
+  window.openCart=function(){ try{ if(typeof oldOpen==='function') oldOpen(); }catch(e){} setTimeout(installButton,30); setTimeout(installButton,250); };
+  const oldRender=window.renderCart;
+  window.renderCart=function(){ try{ if(typeof oldRender==='function') oldRender(); }catch(e){} installButton(); };
+  document.addEventListener('pointerup',function(e){const b=e.target.closest&&e.target.closest('#cartSheet .linko-absolute-wa'); if(b) return sendNow(e);},true);
+  document.addEventListener('click',function(e){const b=e.target.closest&&e.target.closest('#cartSheet .linko-absolute-wa'); if(b) return sendNow(e);},true);
+  setInterval(installButton,700);
+  setTimeout(installButton,100);
+})();
+</script>
+
 </body>
 </html>
 
